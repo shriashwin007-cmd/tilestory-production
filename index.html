@@ -60,7 +60,7 @@ img{display:block;max-width:100%;}
 /* ════════════════════════════
    SCROLL SCRUBBER — Apple Style
    ════════════════════════════ */
-#scrubber{position:relative;height:500vh;background:#06080f;}
+#scrubber{position:relative;height:400vh;background:#06080f;}
 #scrubber-sticky{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;}
 
 /* CANVAS — for real frames when ready */
@@ -982,136 +982,222 @@ function doLogin(){
 }
 
 // ═══════════════════════════════════
-// SCROLL SCRUBBER — Apple Style (Real Video)
+// SCROLL SCRUBBER — LOCKED SCROLL (Apple iPhone style)
+// Page is LOCKED while video plays, then unlocks
 // ═══════════════════════════════════
 (function(){
-  const section   = document.getElementById('scrubber');
-  const sticky    = document.getElementById('scrubber-sticky');
-  const overlay   = document.getElementById('scrub-overlay');
-  const dark      = document.getElementById('scrub-dark');
-  const progFill  = document.getElementById('progFill');
-  const arrow     = document.getElementById('scrub-arrow');
+  const section     = document.getElementById('scrubber');
+  const sticky      = document.getElementById('scrubber-sticky');
+  const overlay     = document.getElementById('scrub-overlay');
+  const dark        = document.getElementById('scrub-dark');
+  const progFill    = document.getElementById('progFill');
+  const arrow       = document.getElementById('scrub-arrow');
   const placeholder = document.getElementById('scrub-placeholder');
 
-  // ── CREATE VIDEO ELEMENT ──
+  // ── VIDEO SETUP ──
   const video = document.createElement('video');
   video.src = 'hero_scroll.mp4';
   video.preload = 'auto';
   video.muted = true;
   video.playsInline = true;
   video.loop = false;
-  video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s;z-index:2;';
+  video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s;z-index:2;';
   sticky.appendChild(video);
 
   let videoDuration = 0;
-  let videoReady = false;
+  let videoReady    = false;
 
   video.addEventListener('loadedmetadata', () => {
     videoDuration = video.duration;
-    videoReady = true;
-    // Fade in video, fade out placeholder
-    video.style.opacity = '1';
-    placeholder.style.opacity = '0';
+    videoReady    = true;
+    video.style.opacity  = '1';
     placeholder.style.transition = 'opacity .6s';
-    console.log('✅ Scroll video ready:', videoDuration + 's');
+    placeholder.style.opacity    = '0';
   });
 
   video.addEventListener('error', () => {
-    console.warn('⚠️ Video not found — using tile placeholder');
-    // Placeholder stays visible, tile animation runs
-    runTileFallback();
+    console.warn('Video missing — tile fallback active');
+    buildTiles();
   });
-
-  // Load video
   video.load();
 
-  // ── TILE FALLBACK (shows while video loads or if video missing) ──
-  const COLS=8,ROWS=6,TOTAL=COLS*ROWS;
-  const COLORS=['#0D2040','#1B3A6B','#2A4464','#1a2f4b','#0f1e2e','#16213A'];
-  const tileGrid = document.getElementById('tileGrid');
-  for(let i=0;i<TOTAL;i++){
-    const t=document.createElement('div');
-    t.className='scrub-tile';
-    t.style.background=COLORS[Math.floor(Math.random()*COLORS.length)];
-    tileGrid.appendChild(t);
+  // ── TILE FALLBACK ──
+  function buildTiles(){
+    const COLS=8,ROWS=6,TOTAL=COLS*ROWS;
+    const COLORS=['#0D2040','#1B3A6B','#2A4464','#1a2f4b','#0f1e2e','#16213A'];
+    const grid=document.getElementById('tileGrid');
+    for(let i=0;i<TOTAL;i++){
+      const t=document.createElement('div');
+      t.className='scrub-tile';
+      t.style.background=COLORS[i%COLORS.length];
+      grid.appendChild(t);
+    }
   }
-  const tiles=[...tileGrid.querySelectorAll('.scrub-tile')];
+  buildTiles();
 
-  function runTileFallback(){
-    placeholder.style.opacity='1';
+  // ── WHEEL / TOUCH INTERCEPT ──
+  // We intercept wheel/touch and manually drive a virtual scroll position
+  // The actual window scroll stays at 0 until video finishes
+  let virtualScroll = 0;          // 0 → 1 progress
+  let windowLocked  = false;
+  let scrubDone     = false;
+  let savedScrollY  = 0;
+
+  // Lock body scroll
+  function lockScroll(){
+    if(windowLocked) return;
+    windowLocked = true;
+    savedScrollY = window.scrollY;
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top      = `-${savedScrollY}px`;
+    document.body.style.width    = '100%';
   }
 
-  function animateTiles(p){
-    if(videoReady) return; // Skip if video is playing
-    const lit=Math.floor(p*TOTAL);
-    tiles.forEach((t,i)=>{
-      const dist=Math.abs(i-lit);
-      if(i<lit){
-        const wave=Math.sin((i/TOTAL)*Math.PI*4+p*Math.PI*2);
-        const intensity=0.3+wave*0.15;
-        const isGold=i%7===0&&p>0.4;
-        if(isGold){t.className='scrub-tile gold';t.style.background='';}
-        else{t.className='scrub-tile lit';t.style.background=`rgba(27,58,107,${intensity})`;}
-      } else if(dist<3){
-        const g=1-(dist/3);
-        t.className='scrub-tile';
-        t.style.background=`rgba(201,168,76,${g*0.4})`;
-        t.style.boxShadow=`inset 0 0 ${g*20}px rgba(201,168,76,${g*0.3})`;
-      } else {
-        t.className='scrub-tile';
-        t.style.background=COLORS[i%COLORS.length];
-        t.style.boxShadow='';
+  // Unlock body scroll
+  function unlockScroll(){
+    if(!windowLocked) return;
+    windowLocked = false;
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.top      = '';
+    document.body.style.width    = '';
+    window.scrollTo(0, savedScrollY);
+  }
+
+  // Drive virtual progress
+  const WHEEL_SENSITIVITY = 0.0008;
+  const TOUCH_SENSITIVITY = 0.003;
+  let touchStartY = 0;
+
+  function driveProgress(delta){
+    if(scrubDone) return;
+    virtualScroll = Math.min(1, Math.max(0, virtualScroll + delta));
+    updateScrubber(virtualScroll);
+    if(virtualScroll >= 1){
+      finishScrubber();
+    }
+  }
+
+  // Wheel
+  window.addEventListener('wheel', e => {
+    if(scrubDone) return;
+    if(!windowLocked && window.scrollY < 10){
+      lockScroll();
+    }
+    if(windowLocked){
+      e.preventDefault();
+      driveProgress(e.deltaY * WHEEL_SENSITIVITY);
+    }
+  }, {passive: false});
+
+  // Touch
+  window.addEventListener('touchstart', e => {
+    touchStartY = e.touches[0].clientY;
+  }, {passive: true});
+
+  window.addEventListener('touchmove', e => {
+    if(scrubDone) return;
+    if(!windowLocked && window.scrollY < 10) lockScroll();
+    if(windowLocked){
+      e.preventDefault();
+      const dy = touchStartY - e.touches[0].clientY;
+      touchStartY = e.touches[0].clientY;
+      driveProgress(dy * TOUCH_SENSITIVITY);
+    }
+  }, {passive: false});
+
+  // Keyboard support
+  window.addEventListener('keydown', e => {
+    if(scrubDone) return;
+    if(['ArrowDown','Space','PageDown'].includes(e.code)){
+      e.preventDefault();
+      if(!windowLocked) lockScroll();
+      driveProgress(0.05);
+    }
+    if(['ArrowUp','PageUp'].includes(e.code)){
+      e.preventDefault();
+      if(!windowLocked) lockScroll();
+      driveProgress(-0.05);
+    }
+  });
+
+  // ── UPDATE SCRUBBER UI ──
+  function updateScrubber(p){
+    // Progress bar
+    progFill.style.width = (p * 100) + '%';
+
+    // Arrow fades out
+    arrow.style.opacity = p < 0.05 ? 0.5 : Math.max(0, 0.5-(p-0.05)*10);
+
+    // Dark overlay lifts as video starts
+    const darkOp = p < 0.05 ? 1 : Math.max(0, 1-(p-0.05)/0.2);
+    dark.style.opacity = darkOp;
+
+    // Text shows at 65%
+    if(p > 0.65) overlay.classList.add('show');
+    else overlay.classList.remove('show');
+
+    // Video scrub
+    if(videoReady && videoDuration > 0){
+      const target = p * videoDuration;
+      if(Math.abs(video.currentTime - target) > 0.02){
+        video.currentTime = target;
       }
-    });
+    }
   }
 
-  // ── SCROLL HANDLER ──
-  let lastP = -1;
-  let ticking = false;
+  // ── FINISH — unlock and let page scroll ──
+  function finishScrubber(){
+    scrubDone = true;
 
-  function onScroll(){
-    if(ticking) return;
-    ticking = true;
-    requestAnimationFrame(()=>{
-      ticking = false;
-      const rect  = section.getBoundingClientRect();
-      const total = section.offsetHeight - window.innerHeight;
-      const scrolled = -rect.top;
-      const p = Math.min(Math.max(scrolled / total, 0), 1);
+    // Show text fully
+    overlay.classList.add('show');
+    progFill.style.width = '100%';
 
-      if(Math.abs(p - lastP) < 0.001) return;
-      lastP = p;
-
-      // PROGRESS BAR
-      progFill.style.width = (p * 100) + '%';
-
-      // ARROW fade
-      arrow.style.opacity = p < 0.05 ? 0.5 : Math.max(0, 0.5-(p-0.05)*10);
-
-      // DARK OVERLAY — fades as video reveals
-      const darkOp = p < 0.1 ? 1 : Math.max(0, 1-(p-0.1)/0.25);
-      dark.style.opacity = darkOp;
-
-      // TEXT overlay — shows from 60% scroll
-      if(p > 0.6) overlay.classList.add('show');
-      else overlay.classList.remove('show');
-
-      // VIDEO SCRUB — the magic!
-      if(videoReady && videoDuration > 0){
-        const targetTime = p * videoDuration;
-        // Only update if difference is significant (avoids micro-stutters)
-        if(Math.abs(video.currentTime - targetTime) > 0.016){
-          video.currentTime = targetTime;
-        }
-      } else {
-        // Tile fallback animation
-        animateTiles(p);
+    // Small pause then unlock
+    setTimeout(() => {
+      unlockScroll();
+      // Smooth scroll past scrubber section into hero
+      const hero = document.getElementById('hero');
+      if(hero){
+        hero.scrollIntoView({behavior:'smooth'});
       }
-    });
+    }, 600);
   }
 
-  window.addEventListener('scroll', onScroll, {passive:true});
-  onScroll();
+  // ── SKIP BUTTON — tap to skip on mobile ──
+  const skipBtn = document.createElement('button');
+  skipBtn.textContent = 'Skip ↓';
+  skipBtn.style.cssText = `
+    position:absolute;bottom:2rem;right:2rem;z-index:20;
+    font-family:'Outfit',sans-serif;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;
+    padding:.45rem 1rem;border-radius:100px;
+    background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.35);
+    color:rgba(201,168,76,.8);cursor:pointer;transition:all .3s;
+  `;
+  skipBtn.addEventListener('click', () => {
+    virtualScroll = 1;
+    updateScrubber(1);
+    finishScrubber();
+  });
+  skipBtn.addEventListener('mouseenter', () => skipBtn.style.background='rgba(201,168,76,.3)');
+  skipBtn.addEventListener('mouseleave', () => skipBtn.style.background='rgba(201,168,76,.15)');
+  sticky.appendChild(skipBtn);
+
+  // ── INIT — lock immediately if at top ──
+  if(window.scrollY < 10){
+    lockScroll();
+  }
+
+  // If user already scrolled past scrubber, skip it
+  window.addEventListener('scroll', () => {
+    if(!scrubDone && window.scrollY > window.innerHeight){
+      scrubDone = true;
+      unlockScroll();
+    }
+  }, {passive:true});
+
 })();
 
 // ═══════════════════════════════════
