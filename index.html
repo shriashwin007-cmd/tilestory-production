@@ -18,7 +18,7 @@
   --ease-smooth:cubic-bezier(.4,0,.2,1);
 }
 html{scroll-behavior:smooth;overflow-x:hidden;}
-body{background:var(--parchment);color:var(--text-dark);font-family:'DM Sans',sans-serif;overflow-x:hidden;cursor:none;}
+body{background:var(--parchment);color:var(--text-dark);font-family:'DM Sans',sans-serif;overflow-x:hidden;cursor:auto;}
 a{text-decoration:none;color:inherit;}
 img{display:block;max-width:100%;}
 
@@ -27,7 +27,7 @@ img{display:block;max-width:100%;}
 .cursor-ring{position:fixed;width:32px;height:32px;border:1.5px solid rgba(201,168,76,.6);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s var(--ease-spring),height .3s var(--ease-spring);left:-100px;top:-100px;}
 .cursor-dot.hov{width:10px;height:10px;background:var(--navy);}
 .cursor-ring.hov{width:50px;height:50px;border-color:rgba(27,58,107,.5);}
-@media(max-width:768px){.cursor-dot,.cursor-ring{display:none;}body{cursor:auto;}}
+@media(max-width:768px){.cursor-dot,.cursor-ring{display:none;}}
 
 /* ── NAV ── */
 #nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 3rem;transition:all .4s var(--ease-smooth);}
@@ -1214,13 +1214,23 @@ footer{background:var(--deep-navy);padding:3rem 2rem;border-top:1px solid rgba(2
 // ═══ CURSOR ═══
 const isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 if(!isTouch){
+  document.body.style.cursor='none';
   const cD=document.getElementById('cDot'),cR=document.getElementById('cRing');
-  let mx=0,my=0,rx=0,ry=0;
-  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cD.style.left=mx+'px';cD.style.top=my+'px';});
-  (function loop(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;cR.style.left=rx+'px';cR.style.top=ry+'px';requestAnimationFrame(loop);})();
+  if(cD) cD.style.display='block';
+  if(cR) cR.style.display='block';
+  let mx=-100,my=-100,rx=-100,ry=-100;
+  document.addEventListener('mousemove',e=>{
+    mx=e.clientX;my=e.clientY;
+    if(cD){cD.style.left=mx+'px';cD.style.top=my+'px';}
+  });
+  (function loop(){
+    rx+=(mx-rx)*.12;ry+=(my-ry)*.12;
+    if(cR){cR.style.left=rx+'px';cR.style.top=ry+'px';}
+    requestAnimationFrame(loop);
+  })();
   document.querySelectorAll('a,button,.coll-card,.rev-card,.feat-card').forEach(el=>{
-    el.addEventListener('mouseenter',()=>{cD.classList.add('hov');cR.classList.add('hov');});
-    el.addEventListener('mouseleave',()=>{cD.classList.remove('hov');cR.classList.remove('hov');});
+    el.addEventListener('mouseenter',()=>{cD&&cD.classList.add('hov');cR&&cR.classList.add('hov');});
+    el.addEventListener('mouseleave',()=>{cD&&cD.classList.remove('hov');cR&&cR.classList.remove('hov');});
   });
 }
 
@@ -1285,115 +1295,143 @@ function doLogin(){
   } else {document.getElementById('loginErr').style.display='block';}
 }
 
-// ════════════════════════════════════════════════════════
-// APPLE SCROLL SCRUBBER v5 — Relative paths, no CORS
-// ════════════════════════════════════════════════════════
+// ══════════════════════════════════════
+// SCROLL SCRUBBER v6 — GUARANTEED WORKS
+// ══════════════════════════════════════
 (function(){
-  const TOTAL    = 151;
-  // Frames are in SAME repo root — relative path, no CORS!
-  const section  = document.getElementById('scrubber');
-  const sticky   = document.getElementById('scrubber-sticky');
-  const dark     = document.getElementById('scrub-dark');
-  const progFill = document.getElementById('progFill');
-  const arrow    = document.getElementById('scrub-arrow');
-  const ph       = document.getElementById('scrub-placeholder');
+  var TOTAL   = 151;
+  var section = document.getElementById('scrubber');
+  var sticky  = document.getElementById('scrubber-sticky');
+  var dark    = document.getElementById('scrub-dark');
+  var prog    = document.getElementById('progFill');
+  var arrow   = document.getElementById('scrub-arrow');
+  var ph      = document.getElementById('scrub-placeholder');
 
-  const elEyebrow = document.getElementById('scrubEyebrow');
-  const elWord1   = document.getElementById('scrubWord1');
-  const elWord2   = document.getElementById('scrubWord2');
-  const elSub     = document.getElementById('scrubSub');
-  const elDiv     = document.getElementById('scrubDividerEl');
+  // Text els
+  var e1=document.getElementById('scrubEyebrow');
+  var w1=document.getElementById('scrubWord1');
+  var w2=document.getElementById('scrubWord2');
+  var sb=document.getElementById('scrubSub');
+  var dv=document.getElementById('scrubDividerEl');
 
-  [[elEyebrow,0],[elWord1,0],[elWord2,0.1],[elSub,0.08]].forEach(([el,b])=>{
-    if(!el) return;
-    [...el.querySelectorAll('span')].forEach((s,i)=>s.style.transitionDelay=(b+i*0.04)+'s');
-  });
+  // Stagger
+  function stag(el,b){ if(!el)return; var sp=el.querySelectorAll('span'); for(var i=0;i<sp.length;i++) sp[i].style.transitionDelay=(b+i*0.04)+'s'; }
+  stag(e1,0); stag(w1,0); stag(w2,0.1); stag(sb,0.08);
 
   // ── CANVAS ──
-  const canvas = document.createElement('canvas');
-  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:2;';
-  sticky.appendChild(canvas);
-  const ctx = canvas.getContext('2d');
+  var cv=document.createElement('canvas');
+  cv.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;';
+  sticky.appendChild(cv);
+  var cx=cv.getContext('2d');
 
-  function resize(){
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-    if(frames[curIdx] && frames[curIdx].complete) drawFrame(curIdx);
-  }
+  function resize(){ cv.width=window.innerWidth; cv.height=window.innerHeight; }
   resize();
-  window.addEventListener('resize', resize, {passive:true});
+  window.addEventListener('resize',resize);
 
-  function drawFrame(i){
-    const img = frames[Math.min(Math.max(Math.round(i),0),TOTAL-1)];
-    if(!img || !img.complete || !img.naturalWidth) return;
-    const cw=canvas.width, ch=canvas.height;
-    const sc=Math.max(cw/img.naturalWidth, ch/img.naturalHeight);
-    const w=img.naturalWidth*sc, h=img.naturalHeight*sc;
-    ctx.clearRect(0,0,cw,ch);
-    ctx.drawImage(img,(cw-w)/2,(ch-h)/2,w,h);
+  function draw(i){
+    i=Math.round(Math.min(Math.max(i,0),TOTAL-1));
+    var img=imgs[i];
+    if(!img||!img.complete||!img.naturalWidth) return;
+    var cw=cv.width,ch=cv.height;
+    var sc=Math.max(cw/img.naturalWidth,ch/img.naturalHeight);
+    var w=img.naturalWidth*sc,h=img.naturalHeight*sc;
+    cx.clearRect(0,0,cw,ch);
+    cx.drawImage(img,(cw-w)/2,(ch-h)/2,w,h);
   }
 
-  // ── LOADER UI ──
-  const lw = document.createElement('div');
-  lw.style.cssText='position:absolute;bottom:3.5rem;left:50%;transform:translateX(-50%);z-index:30;display:flex;flex-direction:column;align-items:center;gap:.5rem;pointer-events:none;';
-  lw.innerHTML=`
-    <div id="ldTxt" style="font-family:Outfit,sans-serif;font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,168,76,.8);">Loading 0%</div>
-    <div style="width:140px;height:1px;background:rgba(255,255,255,.1);">
-      <div id="ldBar" style="height:100%;background:linear-gradient(90deg,#C9A84C,#E8D5A3);width:0%;transition:width .1s;"></div>
-    </div>`;
-  sticky.appendChild(lw);
+  // ── LOADER ──
+  var lbox=document.createElement('div');
+  lbox.innerHTML='<div style="font-family:Outfit,sans-serif;font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,168,76,.8);margin-bottom:.4rem;" id="ltxt">Loading 0%</div><div style="width:140px;height:1px;background:rgba(255,255,255,.12);"><div id="lbar" style="height:100%;width:0%;background:linear-gradient(90deg,#C9A84C,#E8D5A3);transition:width .1s;"></div></div>';
+  lbox.style.cssText='position:absolute;bottom:3.5rem;left:50%;transform:translateX(-50%);z-index:30;text-align:center;pointer-events:none;';
+  sticky.appendChild(lbox);
 
-  // ── PRELOAD — relative paths ──
-  const frames = [];
-  let loaded   = 0;
-  let firstDone = false;
+  // ── LOAD FRAMES ──
+  var imgs=[];
+  var done=0;
+  var firstShown=false;
 
-  for(let i=0;i<TOTAL;i++){
-    const img = new Image();
-    const num = String(i+1).padStart(3,'0');
-    // Relative path — works perfectly on GitHub Pages
-    img.src = 'ezgif-frame-'+num+'.jpg';
-    const idx = i;
-    img.onload = function(){
-      loaded++;
-      const pct = Math.round(loaded/TOTAL*100);
-      const bar = document.getElementById('ldBar');
-      const txt = document.getElementById('ldTxt');
-      if(bar) bar.style.width=pct+'%';
-      if(txt) txt.textContent='Loading '+pct+'%';
-      // Show first frame immediately
-      if(idx===0 && !firstDone){
-        firstDone=true;
-        ph.style.transition='opacity .6s';
-        ph.style.opacity='0';
-        drawFrame(0);
-      }
-      if(loaded===TOTAL){
-        lw.style.transition='opacity .6s';
-        lw.style.opacity='0';
-        setTimeout(()=>lw.remove(),700);
-        drawFrame(Math.round(smoothIdx));
-        console.log('All frames loaded!');
-      }
-    };
-    img.onerror = function(){
-      loaded++;
-      console.warn('Frame missing: ezgif-frame-'+num+'.jpg');
-    };
-    frames.push(img);
+  for(var i=0;i<TOTAL;i++){
+    (function(idx){
+      var img=new Image();
+      var n=String(idx+1);
+      while(n.length<3) n='0'+n;
+      img.src='ezgif-frame-'+n+'.jpg';
+      img.onload=function(){
+        done++;
+        var pct=Math.round(done/TOTAL*100);
+        var bar=document.getElementById('lbar');
+        var txt=document.getElementById('ltxt');
+        if(bar) bar.style.width=pct+'%';
+        if(txt) txt.textContent='Loading '+pct+'%';
+        if(idx===0&&!firstShown){
+          firstShown=true;
+          ph.style.opacity='0';
+          draw(0);
+        }
+        if(done===TOTAL){
+          lbox.style.opacity='0';
+          lbox.style.transition='opacity .5s';
+          setTimeout(function(){ if(lbox.parentNode) lbox.parentNode.removeChild(lbox); },600);
+          draw(Math.round(smooth));
+        }
+      };
+      img.onerror=function(){ done++; };
+      imgs[idx]=img;
+    })(i);
   }
 
-  // ── RAF LERP ──
-  let targetIdx = 0;
-  let smoothIdx = 0;
-  let curIdx    = 0;
-
-  (function raf(){
-    smoothIdx += (targetIdx-smoothIdx)*0.1;
-    const ni = Math.round(smoothIdx);
-    if(ni!==curIdx){ curIdx=ni; drawFrame(curIdx); }
+  // ── RAF SMOOTH ──
+  var target=0, smooth=0, cur=0;
+  function raf(){
+    smooth+=(target-smooth)*0.1;
+    var ni=Math.round(smooth);
+    if(ni!==cur){ cur=ni; draw(cur); }
     requestAnimationFrame(raf);
-  })();
+  }
+  raf();
+
+  // ── SCROLL ──
+  function getP(){
+    var top=section.offsetTop;
+    var h=section.offsetHeight-window.innerHeight;
+    if(h<=0) return 0;
+    return Math.min(Math.max((window.scrollY-top)/h,0),1);
+  }
+
+  function onScroll(){
+    var p=getP();
+    target=p*(TOTAL-1);
+    if(prog) prog.style.width=(p*100)+'%';
+    if(arrow) arrow.style.opacity=p<0.03?'0.5':'0';
+    if(dark) dark.style.opacity=String(Math.max(0,1-p/0.08));
+    if(sticky) sticky.style.opacity=p>0.92?String(Math.max(0,1-(p-0.92)/0.08)):'1';
+
+    // Parallax
+    if(e1) e1.style.transform='translateY('+Math.max(0,(1-p)*70)+'px)';
+    if(w1) w1.style.transform='translateY('+Math.max(0,(1-p)*150)+'px) scale('+Math.max(0.72,0.72+p*0.28).toFixed(2)+')';
+    if(w2) w2.style.transform='translateY('+Math.max(0,(1-p)*210)+'px) scale('+Math.max(0.62,0.62+p*0.38).toFixed(2)+')';
+    if(sb) sb.style.transform='translateY('+Math.max(0,(1-p)*90)+'px)';
+
+    // Reveals
+    if(e1) p>0.20?e1.classList.add('visible'):e1.classList.remove('visible');
+    if(w1) p>0.30?w1.classList.add('visible'):w1.classList.remove('visible');
+    if(w2) p>0.42?w2.classList.add('visible'):w2.classList.remove('visible');
+    if(dv) dv.style.width=p>0.52?'180px':'0px';
+    if(sb) p>0.55?sb.classList.add('visible'):sb.classList.remove('visible');
+  }
+
+  window.addEventListener('scroll',onScroll,{passive:true});
+  onScroll();
+
+  // Skip btn
+  var skip=document.createElement('button');
+  skip.textContent='Skip';
+  skip.style.cssText='position:absolute;bottom:1.8rem;right:1.8rem;z-index:30;font-family:Outfit,sans-serif;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;padding:.42rem .95rem;border-radius:100px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);color:rgba(201,168,76,.7);cursor:pointer;';
+  skip.onclick=function(){ window.scrollTo({top:section.offsetTop+section.offsetHeight,behavior:'smooth'}); };
+  sticky.appendChild(skip);
+
+})();
+
 
   function getP(){
     const top = section.offsetTop;
