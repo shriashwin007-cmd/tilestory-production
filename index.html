@@ -60,7 +60,7 @@ img{display:block;max-width:100%;}
 /* ════════════════════════════
    SCROLL SCRUBBER — Apple Style
    ════════════════════════════ */
-#scrubber{position:relative;height:300vh;background:#000;}
+#scrubber{position:relative;height:500vh;background:#000;}
 #scrubber-sticky{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000;}
 
 /* CANVAS — for real frames when ready */
@@ -108,6 +108,16 @@ img{display:block;max-width:100%;}
 
 /* ── HERO ── */
 #hero{min-height:100vh;background:#000;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+/* Seamless blend from scrubber into hero */
+#scrubber + #hero::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:40%;
+  background:linear-gradient(to bottom,#000 0%,transparent 100%);
+  z-index:3;
+  pointer-events:none;
+}
 .hero-bg{position:absolute;inset:0;}
 .hero-bg::before{content:'';position:absolute;top:0;left:0;right:0;height:30%;background:linear-gradient(to bottom,#000,transparent);z-index:1;pointer-events:none;}
 .hero-bg video{width:100%;height:100%;object-fit:cover;opacity:.3;filter:saturate(.8) brightness(.9);}
@@ -769,7 +779,7 @@ footer{background:var(--deep-navy);padding:3rem 2rem;border-top:1px solid rgba(2
 </section>
 
 <!-- ════ HERO ════ -->
-<section id="hero" style="margin-top:0;padding-top:0;">
+<section id="hero">
   <div class="hero-bg">
     <video autoplay muted loop playsinline preload="auto">
       <source src="hero_bg.mp4" type="video/mp4">
@@ -1295,195 +1305,171 @@ function doLogin(){
   } else {document.getElementById('loginErr').style.display='block';}
 }
 
-// ══════════════════════════════════════════════
-// SCROLL SCRUBBER — FINAL CLEAN VERSION
-// Page scrolls naturally. Sticky canvas draws
-// frames based on scroll position. Smooth RAF.
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// SCROLL SCRUBBER — FINAL
+// 151 frames · sticky canvas · smooth RAF lerp
+// Blends seamlessly into hero below
+// ═══════════════════════════════════════════════════
 (function(){
   var TOTAL   = 151;
   var section = document.getElementById('scrubber');
   var sticky  = document.getElementById('scrubber-sticky');
   var dark    = document.getElementById('scrub-dark');
-  var bar     = document.getElementById('progFill');
+  var progEl  = document.getElementById('progFill');
   var ph      = document.getElementById('scrub-placeholder');
-
-  // text els
-  var e1 = document.getElementById('scrubEyebrow');
-  var w1 = document.getElementById('scrubWord1');
-  var w2 = document.getElementById('scrubWord2');
-  var sb = document.getElementById('scrubSub');
-  var dv = document.getElementById('scrubDividerEl');
+  var e1=document.getElementById('scrubEyebrow');
+  var w1=document.getElementById('scrubWord1');
+  var w2=document.getElementById('scrubWord2');
+  var sb=document.getElementById('scrubSub');
+  var dv=document.getElementById('scrubDividerEl');
 
   // stagger letter delays
-  function stag(el, b){
+  function stag(el,b){
     if(!el) return;
-    var sp = el.querySelectorAll('span');
-    for(var i=0;i<sp.length;i++) sp[i].style.transitionDelay = (b+i*0.04)+'s';
+    var sp=el.querySelectorAll('span');
+    for(var i=0;i<sp.length;i++) sp[i].style.transitionDelay=(b+i*0.04)+'s';
   }
   stag(e1,0); stag(w1,0); stag(w2,0.1); stag(sb,0.08);
 
-  // ── CANVAS ──
+  // ── CANVAS — fills sticky viewport ──
   var cv = document.createElement('canvas');
-  cv.style.position  = 'absolute';
-  cv.style.top       = '0';
-  cv.style.left      = '0';
-  cv.style.width     = '100%';
-  cv.style.height    = '100%';
-  cv.style.zIndex    = '2';
+  cv.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;';
   sticky.appendChild(cv);
   var cx = cv.getContext('2d');
 
+  // Gradient overlay at bottom — blends into hero
+  var grad = document.createElement('div');
+  grad.style.cssText='position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(to bottom,transparent,#000);z-index:3;pointer-events:none;';
+  sticky.appendChild(grad);
+
   function resize(){
-    cv.width  = window.innerWidth;
-    cv.height = window.innerHeight;
+    cv.width=window.innerWidth;
+    cv.height=window.innerHeight;
+    if(imgs[cur]&&imgs[cur].complete) drawFrame(cur);
   }
   resize();
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize',resize);
 
-  // ── DRAW ──
-  function draw(i){
-    var idx = Math.round(Math.min(Math.max(i, 0), TOTAL-1));
-    var img = imgs[idx];
-    if(!img || !img.complete || !img.naturalWidth) return;
-    var cw = cv.width, ch = cv.height;
-    var sc = Math.max(cw/img.naturalWidth, ch/img.naturalHeight);
-    var w  = img.naturalWidth*sc, h = img.naturalHeight*sc;
+  function drawFrame(i){
+    var idx=Math.round(Math.min(Math.max(i,0),TOTAL-1));
+    var img=imgs[idx];
+    if(!img||!img.complete||!img.naturalWidth) return;
+    var cw=cv.width,ch=cv.height;
+    var sc=Math.max(cw/img.naturalWidth,ch/img.naturalHeight);
+    var w=img.naturalWidth*sc,h=img.naturalHeight*sc;
     cx.clearRect(0,0,cw,ch);
-    cx.drawImage(img, (cw-w)/2, (ch-h)/2, w, h);
+    cx.drawImage(img,(cw-w)/2,(ch-h)/2,w,h);
   }
 
   // ── LOADER ──
-  var lbox = document.createElement('div');
-  lbox.style.cssText = 'position:absolute;bottom:3.5rem;left:50%;transform:translateX(-50%);z-index:30;text-align:center;pointer-events:none;';
-  lbox.innerHTML = '<div id="ltxt" style="font-family:Outfit,sans-serif;font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,168,76,.8);margin-bottom:.35rem;">Loading 0%</div>'
-    + '<div style="width:140px;height:1px;background:rgba(255,255,255,.12);">'
-    + '<div id="lbar" style="height:100%;width:0%;background:linear-gradient(90deg,#C9A84C,#E8D5A3);"></div>'
-    + '</div>';
+  var lbox=document.createElement('div');
+  lbox.style.cssText='position:absolute;bottom:4rem;left:50%;transform:translateX(-50%);z-index:30;text-align:center;pointer-events:none;';
+  lbox.innerHTML='<div id="ltxt" style="font-family:Outfit,sans-serif;font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,168,76,.8);margin-bottom:.35rem;">0%</div>'
+    +'<div style="width:120px;height:1px;background:rgba(255,255,255,.15);">'
+    +'<div id="lbar" style="height:100%;width:0%;background:linear-gradient(90deg,#C9A84C,#E8D5A3);"></div>'
+    +'</div>';
   sticky.appendChild(lbox);
 
-  // ── PRELOAD FRAMES ──
-  var imgs  = [];
-  var done  = 0;
-  var first = false;
+  // ── LOAD FRAMES ──
+  var imgs=[];
+  var done=0;
+  var first=false;
 
-  for(var i=0; i<TOTAL; i++){
+  for(var i=0;i<TOTAL;i++){
     (function(idx){
-      var img = new Image();
-      var n = ('00'+(idx+1)).slice(-3);
-      img.src = 'ezgif-frame-'+n+'.jpg';
-      img.onload = function(){
+      var img=new Image();
+      var n=('00'+(idx+1)).slice(-3);
+      img.src='ezgif-frame-'+n+'.jpg';
+      img.onload=function(){
         done++;
-        var pct = Math.round(done/TOTAL*100);
-        var b = document.getElementById('lbar');
-        var t = document.getElementById('ltxt');
-        if(b) b.style.width = pct+'%';
-        if(t) t.textContent = 'Loading '+pct+'%';
-        // show first frame instantly
-        if(idx===0 && !first){
-          first = true;
-          if(ph){ ph.style.transition='opacity .5s'; ph.style.opacity='0'; }
-          draw(0);
+        var pct=Math.round(done/TOTAL*100);
+        var b=document.getElementById('lbar');
+        var t=document.getElementById('ltxt');
+        if(b) b.style.width=pct+'%';
+        if(t) t.textContent=pct+'%';
+        if(idx===0&&!first){
+          first=true;
+          if(ph){ph.style.transition='opacity .6s';ph.style.opacity='0';}
+          drawFrame(0);
         }
         if(done===TOTAL){
-          if(lbox){ lbox.style.transition='opacity .5s'; lbox.style.opacity='0'; }
-          draw(Math.round(smooth));
+          if(lbox){lbox.style.transition='opacity .8s';lbox.style.opacity='0';}
+          drawFrame(Math.round(smooth));
         }
       };
-      img.onerror = function(){ done++; };
-      imgs[idx] = img;
+      img.onerror=function(){done++;};
+      imgs[idx]=img;
     })(i);
   }
 
-  // ── RAF LERP — butter smooth ──
-  var target = 0;
-  var smooth = 0;
-  var cur    = -1;
-
-  function raf(){
-    // lerp toward target
-    smooth += (target - smooth) * 0.1;
-    var ni = Math.round(smooth);
-    if(ni !== cur){
-      cur = ni;
-      draw(cur);
-    }
+  // ── RAF LERP ──
+  var target=0,smooth=0,cur=-1;
+  (function raf(){
+    smooth+=(target-smooth)*0.1;
+    var ni=Math.round(smooth);
+    if(ni!==cur){cur=ni;drawFrame(cur);}
     requestAnimationFrame(raf);
-  }
-  raf();
+  })();
 
-  // ── SCROLL → PROGRESS ──
+  // ── PROGRESS ──
   function getP(){
-    var rect = section.getBoundingClientRect();
-    var total = section.offsetHeight - window.innerHeight;
-    if(total <= 0) return 0;
-    var scrolled = -rect.top;
-    return Math.min(Math.max(scrolled/total, 0), 1);
+    var rect=section.getBoundingClientRect();
+    var total=section.offsetHeight-window.innerHeight;
+    if(total<=0) return 0;
+    return Math.min(Math.max(-rect.top/total,0),1);
   }
 
-  function cls(el, c, add){
+  function vis(el,c,on){
     if(!el) return;
-    if(add) el.classList.add(c);
-    else    el.classList.remove(c);
+    if(on) el.classList.add(c);
+    else   el.classList.remove(c);
   }
 
-  // ── MAIN SCROLL HANDLER ──
+  // ── SCROLL ──
   function onScroll(){
-    var p = getP();
+    var p=getP();
 
-    // frames — forward on scroll down, reverse on scroll up
-    target = p * (TOTAL-1);
+    // frame — forward + reverse
+    target=p*(TOTAL-1);
 
     // progress bar
-    if(bar) bar.style.width = (p*100)+'%';
+    if(progEl) progEl.style.width=(p*100)+'%';
 
-    // dark overlay lifts in first 8%
-    if(dark) dark.style.opacity = String(Math.max(0, 1-(p/0.08)));
+    // dark overlay — lifts fast
+    if(dark) dark.style.opacity=String(Math.max(0,1-(p/0.06)));
 
-    // seamless blend at end — fade sticky into hero
-    if(sticky) sticky.style.opacity = p > 0.9
-      ? String(Math.max(0, 1-(p-0.9)/0.1))
-      : '1';
+    // Bottom gradient intensifies toward end for seamless blend
+    var ge=Math.min(1,p*1.5);
+    grad.style.opacity=String(ge);
 
-    // parallax text — different speeds per layer
-    var v1 = Math.max(0, (1-p)*70);
-    var v2 = Math.max(0, (1-p)*150);
-    var v3 = Math.max(0, (1-p)*210);
-    var v4 = Math.max(0, (1-p)*90);
-    var s1 = (0.72 + p*0.28).toFixed(3);
-    var s2 = (0.62 + p*0.38).toFixed(3);
+    // Parallax text
+    if(e1) e1.style.transform='translateY('+Math.max(0,(1-p)*70)+'px)';
+    if(w1) w1.style.transform='translateY('+Math.max(0,(1-p)*150)+'px) scale('+(0.72+p*0.28).toFixed(3)+')';
+    if(w2) w2.style.transform='translateY('+Math.max(0,(1-p)*210)+'px) scale('+(0.62+p*0.38).toFixed(3)+')';
+    if(sb) sb.style.transform='translateY('+Math.max(0,(1-p)*90)+'px)';
 
-    if(e1) e1.style.transform = 'translateY('+v1+'px)';
-    if(w1) w1.style.transform = 'translateY('+v2+'px) scale('+s1+')';
-    if(w2) w2.style.transform = 'translateY('+v3+'px) scale('+s2+')';
-    if(sb) sb.style.transform = 'translateY('+v4+'px)';
-
-    // letter reveals
-    cls(e1, 'visible', p>0.20);
-    cls(w1, 'visible', p>0.30);
-    cls(w2, 'visible', p>0.42);
-    if(dv) dv.style.width = p>0.52 ? '180px' : '0px';
-    cls(sb, 'visible', p>0.55);
+    // Letter reveals
+    vis(e1,'visible',p>0.20);
+    vis(w1,'visible',p>0.30);
+    vis(w2,'visible',p>0.42);
+    if(dv) dv.style.width=p>0.52?'180px':'0px';
+    vis(sb,'visible',p>0.55);
   }
 
-  window.addEventListener('scroll', onScroll, {passive:true});
-  onScroll(); // run once on load
+  window.addEventListener('scroll',onScroll,{passive:true});
+  onScroll();
 
-  // ── SKIP BUTTON ──
-  var skip = document.createElement('button');
-  skip.textContent = 'Skip ↓';
-  skip.style.cssText = 'position:absolute;bottom:1.8rem;right:1.8rem;z-index:30;'
-    + 'font-family:Outfit,sans-serif;font-size:.58rem;letter-spacing:.15em;'
-    + 'text-transform:uppercase;padding:.42rem .95rem;border-radius:100px;'
-    + 'background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);'
-    + 'color:rgba(201,168,76,.7);cursor:pointer;transition:background .3s;';
-  skip.onclick = function(){
-    var target = section.offsetTop + section.offsetHeight;
-    window.scrollTo({top:target, behavior:'smooth'});
+  // Skip
+  var skip=document.createElement('button');
+  skip.textContent='Skip ↓';
+  skip.style.cssText='position:absolute;bottom:1.2rem;right:1.5rem;z-index:30;font-family:Outfit,sans-serif;font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;padding:.38rem .85rem;border-radius:100px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);color:rgba(201,168,76,.65);cursor:pointer;';
+  skip.onclick=function(){
+    window.scrollTo({top:section.offsetTop+section.offsetHeight,behavior:'smooth'});
   };
   sticky.appendChild(skip);
 
 })();
+
 
 
 
