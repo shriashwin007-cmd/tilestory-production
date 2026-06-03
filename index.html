@@ -60,7 +60,7 @@ img{display:block;max-width:100%;}
 /* ════════════════════════════
    SCROLL SCRUBBER — Apple Style
    ════════════════════════════ */
-#scrubber{position:relative;height:400vh;background:#000;margin:0;padding:0;}
+#scrubber{position:relative;height:380vh;background:#000;margin:0;padding:0;}
 #scrubber-sticky{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000;margin:0;padding:0;}
 
 /* CANVAS — for real frames when ready */
@@ -1286,11 +1286,11 @@ function doLogin(){
 }
 
 // ════════════════════════════════════════════════════════
-// APPLE SCROLL SCRUBBER — Frame Sequence v4
+// APPLE SCROLL SCRUBBER v5 — Relative paths, no CORS
 // ════════════════════════════════════════════════════════
 (function(){
-  const TOTAL    = 152;
-  const BASE     = 'https://raw.githubusercontent.com/shriashwin007-cmd/tilestory-production/main';
+  const TOTAL    = 151;
+  // Frames are in SAME repo root — relative path, no CORS!
   const section  = document.getElementById('scrubber');
   const sticky   = document.getElementById('scrubber-sticky');
   const dark     = document.getElementById('scrub-dark');
@@ -1304,7 +1304,6 @@ function doLogin(){
   const elSub     = document.getElementById('scrubSub');
   const elDiv     = document.getElementById('scrubDividerEl');
 
-  // stagger letter delays
   [[elEyebrow,0],[elWord1,0],[elWord2,0.1],[elSub,0.08]].forEach(([el,b])=>{
     if(!el) return;
     [...el.querySelectorAll('span')].forEach((s,i)=>s.style.transitionDelay=(b+i*0.04)+'s');
@@ -1312,20 +1311,19 @@ function doLogin(){
 
   // ── CANVAS ──
   const canvas = document.createElement('canvas');
-  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:2;background:#000;';
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:2;';
   sticky.appendChild(canvas);
   const ctx = canvas.getContext('2d');
 
   function resize(){
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-    if(frames[curIdx] && frames[curIdx].complete) draw(curIdx);
+    if(frames[curIdx] && frames[curIdx].complete) drawFrame(curIdx);
   }
   resize();
   window.addEventListener('resize', resize, {passive:true});
 
-  // ── DRAW ──
-  function draw(i){
+  function drawFrame(i){
     const img = frames[Math.min(Math.max(Math.round(i),0),TOTAL-1)];
     if(!img || !img.complete || !img.naturalWidth) return;
     const cw=canvas.width, ch=canvas.height;
@@ -1335,121 +1333,103 @@ function doLogin(){
     ctx.drawImage(img,(cw-w)/2,(ch-h)/2,w,h);
   }
 
-  // ── LOAD BAR ──
-  const loadWrap = document.createElement('div');
-  loadWrap.id = 'scrubLoader';
-  loadWrap.style.cssText = 'position:absolute;bottom:3.5rem;left:50%;transform:translateX(-50%);z-index:30;display:flex;flex-direction:column;align-items:center;gap:.5rem;pointer-events:none;';
-  loadWrap.innerHTML = `
-    <div id="loadTxt" style="font-family:Outfit,sans-serif;font-size:.55rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(201,168,76,.7);">Loading · 0%</div>
-    <div style="width:140px;height:1px;background:rgba(255,255,255,.1);border-radius:1px;">
-      <div id="loadBar" style="height:100%;background:linear-gradient(90deg,#C9A84C,#E8D5A3);width:0%;transition:width .15s;border-radius:1px;"></div>
+  // ── LOADER UI ──
+  const lw = document.createElement('div');
+  lw.style.cssText='position:absolute;bottom:3.5rem;left:50%;transform:translateX(-50%);z-index:30;display:flex;flex-direction:column;align-items:center;gap:.5rem;pointer-events:none;';
+  lw.innerHTML=`
+    <div id="ldTxt" style="font-family:Outfit,sans-serif;font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,168,76,.8);">Loading 0%</div>
+    <div style="width:140px;height:1px;background:rgba(255,255,255,.1);">
+      <div id="ldBar" style="height:100%;background:linear-gradient(90deg,#C9A84C,#E8D5A3);width:0%;transition:width .1s;"></div>
     </div>`;
-  sticky.appendChild(loadWrap);
+  sticky.appendChild(lw);
 
-  // ── PRELOAD FRAMES ──
-  const frames = new Array(TOTAL);
-  let loaded = 0;
-  let firstReady = false;
+  // ── PRELOAD — relative paths ──
+  const frames = [];
+  let loaded   = 0;
+  let firstDone = false;
 
-  function onLoad(i){
-    loaded++;
-    const pct = Math.round(loaded/TOTAL*100);
-    const bar = document.getElementById('loadBar');
-    const txt = document.getElementById('loadTxt');
-    if(bar) bar.style.width = pct+'%';
-    if(txt) txt.textContent = 'Loading · '+pct+'%';
-
-    // Draw first frame as soon as it loads
-    if(i===0 && !firstReady){
-      firstReady = true;
-      ph.style.transition = 'opacity .8s';
-      ph.style.opacity = '0';
-      draw(0);
-    }
-
-    if(loaded === TOTAL){
-      const lw = document.getElementById('scrubLoader');
-      if(lw){ lw.style.transition='opacity .6s'; lw.style.opacity='0'; setTimeout(()=>lw.remove(),700); }
-      console.log('✅ All 152 frames loaded!');
-      draw(Math.round(smoothIdx));
-    }
-  }
-
-  // Load frames 0-first for fastest first paint
-  for(let i=0; i<TOTAL; i++){
+  for(let i=0;i<TOTAL;i++){
     const img = new Image();
-    img.crossOrigin = 'anonymous';
     const num = String(i+1).padStart(3,'0');
-    img.src = BASE+'/ezgif-frame-'+num+'.jpg';
+    // Relative path — works perfectly on GitHub Pages
+    img.src = 'ezgif-frame-'+num+'.jpg';
     const idx = i;
-    img.onload  = ()=>onLoad(idx);
-    img.onerror = ()=>{ loaded++; };
-    frames[i] = img;
+    img.onload = function(){
+      loaded++;
+      const pct = Math.round(loaded/TOTAL*100);
+      const bar = document.getElementById('ldBar');
+      const txt = document.getElementById('ldTxt');
+      if(bar) bar.style.width=pct+'%';
+      if(txt) txt.textContent='Loading '+pct+'%';
+      // Show first frame immediately
+      if(idx===0 && !firstDone){
+        firstDone=true;
+        ph.style.transition='opacity .6s';
+        ph.style.opacity='0';
+        drawFrame(0);
+      }
+      if(loaded===TOTAL){
+        lw.style.transition='opacity .6s';
+        lw.style.opacity='0';
+        setTimeout(()=>lw.remove(),700);
+        drawFrame(Math.round(smoothIdx));
+        console.log('All frames loaded!');
+      }
+    };
+    img.onerror = function(){
+      loaded++;
+      console.warn('Frame missing: ezgif-frame-'+num+'.jpg');
+    };
+    frames.push(img);
   }
 
-  // ── RAF SMOOTH LERP ──
+  // ── RAF LERP ──
   let targetIdx = 0;
   let smoothIdx = 0;
   let curIdx    = 0;
 
-  function raf(){
-    smoothIdx += (targetIdx - smoothIdx) * 0.1;
+  (function raf(){
+    smoothIdx += (targetIdx-smoothIdx)*0.1;
     const ni = Math.round(smoothIdx);
-    if(ni !== curIdx){
-      curIdx = ni;
-      draw(curIdx);
-    }
+    if(ni!==curIdx){ curIdx=ni; drawFrame(curIdx); }
     requestAnimationFrame(raf);
-  }
-  raf();
+  })();
 
-  // ── PROGRESS ──
   function getP(){
-    const top  = section.offsetTop;
-    const h    = section.offsetHeight;
-    const vh   = window.innerHeight;
+    const top = section.offsetTop;
+    const h   = section.offsetHeight;
+    const vh  = window.innerHeight;
     return Math.min(Math.max((window.scrollY-top)/(h-vh),0),1);
   }
 
-  function tc(el,cls,add){ if(!el) return; add?el.classList.add(cls):el.classList.remove(cls); }
+  function tc(el,cls,add){ if(!el)return; add?el.classList.add(cls):el.classList.remove(cls); }
 
-  // ── SCROLL ──
   function onScroll(){
     const p = getP();
-
-    // Frame — forward + reverse
     targetIdx = p*(TOTAL-1);
-
-    // Progress bar
     progFill.style.width=(p*100)+'%';
+    arrow.style.opacity=p<0.03?'0.5':'0';
+    dark.style.opacity=String(Math.max(0,1-(p/0.08)));
+    sticky.style.opacity=p>0.92?String(Math.max(0,1-(p-0.92)/0.08)):'1';
 
-    // Arrow
-    arrow.style.opacity = p<0.03?'0.5':'0';
-
-    // Dark overlay — lifts fast in first 8%
-    dark.style.opacity = String(Math.max(0,1-(p/0.08)));
-
-    // Seamless end fade
-    sticky.style.opacity = p>0.92 ? String(Math.max(0,1-(p-0.92)/0.08)) : '1';
-
-    // Parallax text
+    // Parallax
     if(elEyebrow) elEyebrow.style.transform=`translateY(${Math.max(0,(1-p)*70)}px)`;
-    if(elWord1)   elWord1.style.transform  =`translateY(${Math.max(0,(1-p)*150)}px) scale(${(0.72+p*0.28).toFixed(3)})`;
-    if(elWord2)   elWord2.style.transform  =`translateY(${Math.max(0,(1-p)*210)}px) scale(${(0.62+p*0.38).toFixed(3)})`;
-    if(elSub)     elSub.style.transform    =`translateY(${Math.max(0,(1-p)*90)}px)`;
+    if(elWord1)   elWord1.style.transform=`translateY(${Math.max(0,(1-p)*150)}px) scale(${+(0.72+p*0.28).toFixed(3)})`;
+    if(elWord2)   elWord2.style.transform=`translateY(${Math.max(0,(1-p)*210)}px) scale(${+(0.62+p*0.38).toFixed(3)})`;
+    if(elSub)     elSub.style.transform=`translateY(${Math.max(0,(1-p)*90)}px)`;
 
-    // Letter reveals
+    // Reveals
     tc(elEyebrow,'visible',p>0.20);
     tc(elWord1,  'visible',p>0.30);
     tc(elWord2,  'visible',p>0.42);
-    if(elDiv) elDiv.style.width = p>0.52?'180px':'0px';
-    tc(elSub,    'visible',p>0.55);
+    if(elDiv) elDiv.style.width=p>0.52?'180px':'0px';
+    tc(elSub,'visible',p>0.55);
   }
 
   window.addEventListener('scroll',onScroll,{passive:true});
   onScroll();
 
-  // ── SKIP ──
+  // Skip button
   const skip=document.createElement('button');
   skip.textContent='Skip ↓';
   skip.style.cssText='position:absolute;bottom:1.8rem;right:1.8rem;z-index:30;font-family:Outfit,sans-serif;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;padding:.42rem .95rem;border-radius:100px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);color:rgba(201,168,76,.7);cursor:pointer;transition:all .3s;';
@@ -1459,6 +1439,7 @@ function doLogin(){
   sticky.appendChild(skip);
 
 })();
+
 
     img.onerror = ()=>{ loadedCount++; };
     frames.push(img);
