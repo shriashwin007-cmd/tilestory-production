@@ -399,6 +399,96 @@ footer{background:var(--deep-navy);padding:3rem 2rem;border-top:1px solid rgba(2
 .reveal.in{opacity:1;transform:translateY(0);}
 .d1{transition-delay:.1s;}.d2{transition-delay:.2s;}.d3{transition-delay:.3s;}.d4{transition-delay:.4s;}
 
+/* ── SPLIT LETTER STYLES ── */
+.scrub-eyebrow span{display:inline-block;opacity:0;transform:translateY(30px) rotateX(90deg);transition:all .5s;transform-origin:bottom;font-family:'Outfit',sans-serif;font-size:.65rem;letter-spacing:.38em;}
+.scrub-title{display:flex;flex-direction:column;align-items:center;gap:.2em;line-height:1;}
+.scrub-word{display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.scrub-word span{display:inline-block;opacity:0;transform:translateY(100%);font-family:'Cinzel',serif;font-size:clamp(3rem,9vw,8rem);font-weight:700;color:#fff;letter-spacing:.12em;transition:transform .6s,opacity .6s;text-shadow:0 4px 40px rgba(0,0,0,.5);}
+#scrubWord2 span{color:var(--gold);text-shadow:0 0 40px rgba(201,168,76,.4);}
+.scrub-sub span{display:inline-block;opacity:0;transform:translateY(20px);font-family:'Cormorant Garamond',serif;font-size:clamp(.9rem,2vw,1.3rem);font-weight:300;color:rgba(255,255,255,.65);letter-spacing:.12em;transition:opacity .4s,transform .4s;}
+
+/* VISIBLE states — driven by JS */
+.scrub-eyebrow.visible span{opacity:1;transform:translateY(0) rotateX(0);}
+.scrub-word.visible span{opacity:1;transform:translateY(0);}
+.scrub-sub.visible span{opacity:1;transform:translateY(0);}
+
+/* PARALLAX layers — driven inline by JS */
+#scrubWord1{will-change:transform;}
+#scrubWord2{will-change:transform;}
+#scrubEyebrow{will-change:transform;}
+#scrubSub{will-change:transform;}
+
+/* ── NEW AI CHAT FAB ── */
+.ai-chat-fab{
+  position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;
+  width:60px;height:60px;border-radius:50%;
+  background:linear-gradient(135deg,#1B3A6B,#0D2040);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  border:none;
+  box-shadow:0 0 0 0 rgba(201,168,76,.6);
+  animation:aiFabRing 2.5s ease-in-out infinite;
+  transition:transform .3s,opacity .3s;
+  overflow:visible;
+}
+.ai-chat-fab::before{
+  content:'';position:absolute;inset:-4px;border-radius:50%;
+  background:conic-gradient(var(--gold) 0deg,transparent 120deg,var(--gold) 240deg,transparent 360deg);
+  animation:aiFabSpin 3s linear infinite;
+  z-index:-1;
+  mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));
+}
+.ai-chat-fab::after{
+  content:'AI';position:absolute;top:-8px;right:-4px;
+  background:var(--gold);color:var(--deep-navy);
+  font-family:'Outfit',sans-serif;font-size:.45rem;font-weight:700;letter-spacing:.05em;
+  padding:.18rem .38rem;border-radius:100px;
+  box-shadow:0 2px 8px rgba(201,168,76,.4);
+}
+@keyframes aiFabRing{
+  0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,.5),0 8px 28px rgba(27,58,107,.5);}
+  50%{box-shadow:0 0 0 10px rgba(201,168,76,0),0 8px 28px rgba(27,58,107,.5);}
+}
+@keyframes aiFabSpin{to{transform:rotate(360deg);}}
+.ai-chat-fab:hover{transform:scale(1.12);}
+.ai-chat-fab.open{opacity:0;pointer-events:none;transform:scale(.7);}
+.ai-chat-fab svg{width:26px;height:26px;color:#fff;position:relative;z-index:1;}
+
+/* ── NEW WHATSAPP FAB ── */
+.wa-float{
+  position:fixed;bottom:1.5rem;left:1.5rem;z-index:9997;
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,#25D366,#128C7E);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  text-decoration:none;font-size:1.5rem;
+  box-shadow:0 4px 20px rgba(37,211,102,.4);
+  transition:transform .3s,box-shadow .3s;
+  animation:waFloat 3s ease-in-out infinite;
+  position:fixed;
+}
+.wa-float::before{
+  content:'Chat';position:absolute;
+  left:calc(100% + 10px);top:50%;transform:translateY(-50%) translateX(-5px);
+  background:rgba(37,211,102,.95);color:#fff;
+  font-family:'Outfit',sans-serif;font-size:.58rem;font-weight:600;letter-spacing:.05em;
+  padding:.3rem .7rem;border-radius:100px;white-space:nowrap;
+  opacity:0;transition:all .3s;pointer-events:none;
+  box-shadow:0 4px 12px rgba(37,211,102,.3);
+}
+.wa-float::after{
+  content:'';position:absolute;
+  left:calc(100% + 6px);top:50%;transform:translateY(-50%);
+  border:5px solid transparent;border-right-color:rgba(37,211,102,.95);
+  opacity:0;transition:all .3s;pointer-events:none;
+}
+.wa-float:hover::before,.wa-float:hover::after{opacity:1;transform:translateY(-50%) translateX(0);}
+.wa-float:hover::after{transform:translateY(-50%);}
+.wa-float:hover{transform:scale(1.1);box-shadow:0 8px 30px rgba(37,211,102,.5);}
+@keyframes waFloat{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-5px);}
+}
+
 /* ── MOBILE ── */
 @media(max-width:768px){
   section{padding:5rem 1.2rem;}
@@ -475,12 +565,33 @@ footer{background:var(--deep-navy);padding:3rem 2rem;border-top:1px solid rgba(2
     <!-- DARK OVERLAY -->
     <div id="scrub-dark"></div>
 
-    <!-- TEXT -->
+    <!-- TEXT — Split Letter Parallax -->
     <div id="scrub-overlay">
-      <div class="scrub-eyebrow">Chennai's Premier Tile Destination</div>
-      <div class="scrub-title">TILE STORY<em>Where Design Meets</em></div>
-      <div class="scrub-divider"></div>
-      <div class="scrub-sub">300+ Premium Tiles · Nungambakkam</div>
+      <div class="scrub-eyebrow" id="scrubEyebrow">
+        <span>C</span><span>H</span><span>E</span><span>N</span><span>N</span><span>A</span><span>I</span>
+        <span style="opacity:.3;margin:0 .3em">·</span>
+        <span>P</span><span>R</span><span>E</span><span>M</span><span>I</span><span>E</span><span>R</span>
+        <span style="opacity:.3;margin:0 .3em">·</span>
+        <span>T</span><span>I</span><span>L</span><span>E</span><span>S</span>
+      </div>
+      <div class="scrub-title" id="scrubTitle">
+        <div class="scrub-word" id="scrubWord1">
+          <span>T</span><span>I</span><span>L</span><span>E</span>
+        </div>
+        <div class="scrub-word" id="scrubWord2">
+          <span>S</span><span>T</span><span>O</span><span>R</span><span>Y</span>
+        </div>
+      </div>
+      <div class="scrub-divider" id="scrubDividerEl"></div>
+      <div class="scrub-sub" id="scrubSub">
+        <span>W</span><span>h</span><span>e</span><span>r</span><span>e</span>
+        <span style="display:inline-block;width:.4em"></span>
+        <span>D</span><span>e</span><span>s</span><span>i</span><span>g</span><span>n</span>
+        <span style="display:inline-block;width:.4em"></span>
+        <span>M</span><span>e</span><span>e</span><span>t</span><span>s</span>
+        <span style="display:inline-block;width:.4em"></span>
+        <span>C</span><span>r</span><span>a</span><span>f</span><span>t</span><span>s</span><span>m</span><span>a</span><span>n</span><span>s</span><span>h</span><span>i</span><span>p</span>
+      </div>
     </div>
 
     <!-- PROGRESS -->
@@ -1122,6 +1233,24 @@ function doLogin(){
     }
   });
 
+  // ── GRAB TEXT ELEMENTS ──
+  const scrubEyebrow = document.getElementById('scrubEyebrow');
+  const scrubWord1   = document.getElementById('scrubWord1');
+  const scrubWord2   = document.getElementById('scrubWord2');
+  const scrubSub     = document.getElementById('scrubSub');
+  const scrubDivEl   = document.getElementById('scrubDividerEl');
+
+  // Stagger letter animations
+  function staggerLetters(el, delayBase){
+    [...el.querySelectorAll('span')].forEach((s,i)=>{
+      s.style.transitionDelay = (delayBase + i*0.04)+'s';
+    });
+  }
+  staggerLetters(scrubEyebrow, 0);
+  staggerLetters(scrubWord1, 0);
+  staggerLetters(scrubWord2, 0.08);
+  staggerLetters(scrubSub, 0.1);
+
   // ── UPDATE SCRUBBER UI ──
   function updateScrubber(p){
     // Progress bar
@@ -1130,13 +1259,51 @@ function doLogin(){
     // Arrow fades out
     arrow.style.opacity = p < 0.05 ? 0.5 : Math.max(0, 0.5-(p-0.05)*10);
 
-    // Dark overlay lifts as video starts
+    // Dark overlay lifts
     const darkOp = p < 0.05 ? 1 : Math.max(0, 1-(p-0.05)/0.2);
     dark.style.opacity = darkOp;
 
-    // Text shows at 65%
-    if(p > 0.65) overlay.classList.add('show');
-    else overlay.classList.remove('show');
+    // ── LETTER REVEAL — triggered at scroll thresholds ──
+    // Eyebrow appears at 30%
+    if(p > 0.30) scrubEyebrow.classList.add('visible');
+    else scrubEyebrow.classList.remove('visible');
+
+    // TILE word at 40%
+    if(p > 0.40) scrubWord1.classList.add('visible');
+    else scrubWord1.classList.remove('visible');
+
+    // STORY word at 50%
+    if(p > 0.50) scrubWord2.classList.add('visible');
+    else scrubWord2.classList.remove('visible');
+
+    // Divider + sub at 60%
+    if(p > 0.60){
+      scrubDivEl.style.width='180px';
+      scrubSub.classList.add('visible');
+      overlay.classList.add('show');
+    } else {
+      scrubDivEl.style.width='0px';
+      scrubSub.classList.remove('visible');
+      overlay.classList.remove('show');
+    }
+
+    // ── PARALLAX — each layer moves at different speed ──
+    // p=0 → no offset, p=1 → max offset
+    const vh = window.innerHeight;
+
+    // Eyebrow moves up slowly (slowest parallax)
+    scrubEyebrow.style.transform = `translateY(${(1-p)*60}px)`;
+
+    // TILE — moves up medium speed + slight scale
+    const scale1 = 0.85 + p * 0.15;
+    scrubWord1.style.transform = `translateY(${(1-p)*120}px) scale(${scale1})`;
+
+    // STORY — moves up faster + different scale (opposite)
+    const scale2 = 0.7 + p * 0.3;
+    scrubWord2.style.transform = `translateY(${(1-p)*180}px) scale(${scale2})`;
+
+    // Sub — moves up and fades in from bottom
+    scrubSub.style.transform = `translateY(${(1-p)*80}px)`;
 
     // Video scrub
     if(videoReady && videoDuration > 0){
