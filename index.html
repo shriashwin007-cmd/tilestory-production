@@ -60,7 +60,7 @@ img{display:block;max-width:100%;}
 /* ════════════════════════════
    SCROLL SCRUBBER — Apple Style
    ════════════════════════════ */
-#scrubber{position:relative;height:300vh;background:#000;margin:0;padding:0;}
+#scrubber{position:relative;height:400vh;background:#000;margin:0;padding:0;}
 #scrubber-sticky{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000;margin:0;padding:0;}
 
 /* CANVAS — for real frames when ready */
@@ -1285,18 +1285,19 @@ function doLogin(){
   } else {document.getElementById('loginErr').style.display='block';}
 }
 
-// ════════════════════════════════════════════════════
-// APPLE SCROLL SCRUBBER v3
-// • Reverse on scroll up
-// • Seamless — no black gap
-// • RAF lerp for butter smooth
-// ════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+// APPLE SCROLL SCRUBBER — Frame Sequence (152 frames)
+// Pure canvas draw, scroll drives frame index
+// Reverse on scroll up, butter smooth RAF lerp
+// ════════════════════════════════════════════════════════
 (function(){
-  const section   = document.getElementById('scrubber');
-  const sticky    = document.getElementById('scrubber-sticky');
-  const progFill  = document.getElementById('progFill');
-  const arrow     = document.getElementById('scrub-arrow');
-  const dark      = document.getElementById('scrub-dark');
+  const TOTAL   = 152;
+  const BASE    = 'https://raw.githubusercontent.com/shriashwin007-cmd/tilestory-production/main';
+  const section = document.getElementById('scrubber');
+  const sticky  = document.getElementById('scrubber-sticky');
+  const dark    = document.getElementById('scrub-dark');
+  const progFill= document.getElementById('progFill');
+  const arrow   = document.getElementById('scrub-arrow');
   const placeholder = document.getElementById('scrub-placeholder');
 
   const scrubEyebrow = document.getElementById('scrubEyebrow');
@@ -1305,140 +1306,167 @@ function doLogin(){
   const scrubSub     = document.getElementById('scrubSub');
   const scrubDivEl   = document.getElementById('scrubDividerEl');
 
-  function staggerLetters(el, base){
+  // Stagger letter transitions
+  function stagger(el,base){
     if(!el) return;
-    [...el.querySelectorAll('span')].forEach((s,i)=>{ s.style.transitionDelay=(base+i*0.04)+'s'; });
+    [...el.querySelectorAll('span')].forEach((s,i)=>s.style.transitionDelay=(base+i*0.04)+'s');
   }
-  staggerLetters(scrubEyebrow,0); staggerLetters(scrubWord1,0);
-  staggerLetters(scrubWord2,0.1); staggerLetters(scrubSub,0.08);
+  stagger(scrubEyebrow,0); stagger(scrubWord1,0);
+  stagger(scrubWord2,0.1); stagger(scrubSub,0.08);
 
-  // ── TILE FALLBACK ──
-  const tileGrid=document.getElementById('tileGrid');
-  const TOTAL=48;
-  const TC=['#0D2040','#1B3A6B','#2A4464','#1a2f4b','#0f1e2e','#16213A'];
-  for(let i=0;i<TOTAL;i++){
-    const t=document.createElement('div');
-    t.className='scrub-tile';
-    t.style.background=TC[i%TC.length];
-    tileGrid.appendChild(t);
+  // ── CANVAS SETUP ──
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;';
+  sticky.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas(){
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    if(currentFrame >= 0 && frames[currentFrame]?.complete) drawFrame(currentFrame);
   }
-  const tiles=[...tileGrid.querySelectorAll('.scrub-tile')];
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas, {passive:true});
 
-  // ── VIDEO ──
-  const video=document.createElement('video');
-  video.src='hero_scroll.mp4';
-  video.preload='auto';
-  video.muted=true;
-  video.playsInline=true;
-  video.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;z-index:2;';
-  sticky.appendChild(video);
+  // ── PRELOAD ALL 152 FRAMES ──
+  const frames = [];
+  let loadedCount = 0;
+  let firstFrameReady = false;
 
-  let duration=0, videoReady=false;
-  let targetTime=0, smoothTime=0;
-  let rafId=null;
+  // Loading progress UI
+  const loadUI = document.createElement('div');
+  loadUI.style.cssText = `
+    position:absolute;bottom:3.5rem;left:50%;transform:translateX(-50%);
+    z-index:20;display:flex;flex-direction:column;align-items:center;gap:.5rem;
+  `;
+  loadUI.innerHTML = `
+    <div style="font-family:'Outfit',sans-serif;font-size:.58rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(201,168,76,.6);" id="loadTxt">Loading frames...</div>
+    <div style="width:120px;height:1px;background:rgba(255,255,255,.1);">
+      <div id="loadBar" style="height:100%;background:var(--gold);width:0%;transition:width .2s;"></div>
+    </div>
+  `;
+  sticky.appendChild(loadUI);
 
-  video.addEventListener('loadedmetadata',()=>{
-    duration=video.duration;
-    videoReady=true;
-    video.style.transition='opacity 1s';
-    video.style.opacity='1';
-    placeholder.style.transition='opacity 1s';
-    placeholder.style.opacity='0';
-  });
-  video.load();
+  function onFrameLoad(i){
+    loadedCount++;
+    const pct = Math.round(loadedCount/TOTAL*100);
+    const bar = document.getElementById('loadBar');
+    const txt = document.getElementById('loadTxt');
+    if(bar) bar.style.width = pct+'%';
 
-  // ── BUTTER SMOOTH RAF LERP ──
-  // This is what makes it smooth — lerp toward target every frame
-  function rafLoop(){
-    if(videoReady && duration>0){
-      smoothTime+=(targetTime-smoothTime)*0.08; // 0.08 = smooth, increase for snappier
-      if(Math.abs(video.currentTime-smoothTime)>0.004){
-        video.currentTime=smoothTime;
-      }
+    // Show first frame immediately
+    if(i===0 && !firstFrameReady){
+      firstFrameReady = true;
+      placeholder.style.transition='opacity .6s';
+      placeholder.style.opacity='0';
+      drawFrame(0);
+      canvas.style.opacity='1';
     }
-    rafId=requestAnimationFrame(rafLoop);
-  }
-  rafId=requestAnimationFrame(rafLoop);
 
-  // ── GET PROGRESS 0→1 ──
+    if(loadedCount === TOTAL){
+      // All loaded — hide loader
+      loadUI.style.transition='opacity .6s';
+      loadUI.style.opacity='0';
+      setTimeout(()=>loadUI.remove(),700);
+      if(txt) txt.textContent='Ready!';
+      console.log('✅ All '+TOTAL+' frames loaded!');
+    }
+  }
+
+  for(let i=0;i<TOTAL;i++){
+    const img = new Image();
+    const num = String(i+1).padStart(3,'0');
+    img.src = BASE+'/ezgif-frame-'+num+'.jpg';
+    img.onload  = (()=>{ const idx=i; return ()=>onFrameLoad(idx); })();
+    img.onerror = ()=>{ loadedCount++; };
+    frames.push(img);
+  }
+
+  // ── DRAW FRAME ──
+  function drawFrame(index){
+    const img = frames[Math.min(Math.max(Math.round(index),0),TOTAL-1)];
+    if(!img || !img.complete || img.naturalWidth===0) return;
+    const cw=canvas.width, ch=canvas.height;
+    const scale=Math.max(cw/img.naturalWidth, ch/img.naturalHeight);
+    const w=img.naturalWidth*scale, h=img.naturalHeight*scale;
+    ctx.clearRect(0,0,cw,ch);
+    ctx.drawImage(img,(cw-w)/2,(ch-h)/2,w,h);
+  }
+
+  // ── RAF SMOOTH FRAME INDEX ──
+  let targetIndex = 0;
+  let smoothIndex = 0;
+  let currentFrame = 0;
+
+  function rafLoop(){
+    smoothIndex += (targetIndex - smoothIndex) * 0.12;
+    const idx = Math.round(smoothIndex);
+    if(idx !== currentFrame){
+      currentFrame = idx;
+      drawFrame(currentFrame);
+    }
+    requestAnimationFrame(rafLoop);
+  }
+  rafLoop();
+
+  // ── GET SCROLL PROGRESS 0→1 ──
   function getP(){
-    const sTop=section.offsetTop;
-    const sH=section.offsetHeight;
-    const vH=window.innerHeight;
-    const raw=(window.scrollY-sTop)/(sH-vH);
+    const sTop   = section.offsetTop;
+    const sH     = section.offsetHeight;
+    const vH     = window.innerHeight;
+    const raw    = (window.scrollY - sTop) / (sH - vH);
     return Math.min(Math.max(raw,0),1);
   }
 
   function tc(el,cls,add){ if(!el) return; add?el.classList.add(cls):el.classList.remove(cls); }
 
-  function animTiles(p){
-    const lit=Math.floor(p*TOTAL);
-    tiles.forEach((t,i)=>{
-      const d=Math.abs(i-lit);
-      if(i<lit){
-        const w=Math.sin((i/TOTAL)*Math.PI*3+p*Math.PI*2)*0.1;
-        t.style.background=i%9===0&&p>0.35?`rgba(201,168,76,${0.2+w})`:`rgba(27,58,107,${0.22+w})`;
-        t.style.boxShadow='';
-      } else if(d<4){
-        const g=1-d/4;
-        t.style.background=`rgba(201,168,76,${g*0.3})`;
-        t.style.boxShadow=`inset 0 0 ${g*16}px rgba(201,168,76,${g*0.2})`;
-      } else {
-        t.style.background=TC[i%TC.length];
-        t.style.boxShadow='';
-      }
-    });
-  }
-
   // ── SCROLL HANDLER ──
   function onScroll(){
-    const p=getP();
+    const p = getP();
 
-    // ── VIDEO SCRUB (works both forward AND reverse) ──
-    if(videoReady && duration>0) targetTime=p*duration;
-    if(!videoReady) animTiles(p);
+    // Frame index — goes forward AND reverse with scroll
+    targetIndex = p * (TOTAL-1);
 
     // Progress bar
-    progFill.style.width=(p*100)+'%';
+    progFill.style.width = (p*100)+'%';
 
     // Arrow
-    arrow.style.opacity=p<0.02?'0.5':'0';
+    arrow.style.opacity = p<0.03?'0.5':'0';
 
-    // Dark overlay — lifts in first 10% of scroll
-    dark.style.opacity=Math.max(0,1-(p/0.1));
+    // Dark overlay lifts in first 8%
+    dark.style.opacity = Math.max(0, 1-(p/0.08));
 
-    // ── SEAMLESS TRANSITION at end of scrubber ──
-    // When p approaches 1, fade the sticky to blend into hero
-    const endFade=p>0.92?Math.max(0,1-(p-0.92)/0.08):1;
-    sticky.style.opacity=String(endFade);
+    // Seamless fade at end
+    sticky.style.opacity = p>0.92 ? String(Math.max(0,1-(p-0.92)/0.08)) : '1';
 
-    // ── PARALLAX TEXT — different speeds ──
+    // ── PARALLAX TEXT ──
     if(scrubEyebrow) scrubEyebrow.style.transform=`translateY(${Math.max(0,(1-p)*70)}px)`;
-    if(scrubWord1)   scrubWord1.style.transform=`translateY(${Math.max(0,(1-p)*140)}px) scale(${0.75+p*0.25})`;
-    if(scrubWord2)   scrubWord2.style.transform=`translateY(${Math.max(0,(1-p)*200)}px) scale(${0.65+p*0.35})`;
+    if(scrubWord1)   scrubWord1.style.transform=`translateY(${Math.max(0,(1-p)*150)}px) scale(${0.72+p*0.28})`;
+    if(scrubWord2)   scrubWord2.style.transform=`translateY(${Math.max(0,(1-p)*210)}px) scale(${0.62+p*0.38})`;
     if(scrubSub)     scrubSub.style.transform=`translateY(${Math.max(0,(1-p)*90)}px)`;
 
-    // Letter reveals
-    tc(scrubEyebrow,'visible',p>0.22);
+    // ── LETTER REVEALS ──
+    tc(scrubEyebrow,'visible',p>0.20);
     tc(scrubWord1,  'visible',p>0.30);
     tc(scrubWord2,  'visible',p>0.42);
-    if(scrubDivEl)  scrubDivEl.style.width=p>0.52?'180px':'0px';
+    if(scrubDivEl)  scrubDivEl.style.width = p>0.52?'180px':'0px';
     tc(scrubSub,    'visible',p>0.55);
   }
 
   window.addEventListener('scroll',onScroll,{passive:true});
   onScroll();
 
-  // ── SKIP ──
+  // ── SKIP BUTTON ──
   const skip=document.createElement('button');
   skip.textContent='Skip ↓';
-  skip.style.cssText='position:absolute;bottom:1.8rem;right:1.8rem;z-index:20;font-family:Outfit,sans-serif;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;padding:.42rem .95rem;border-radius:100px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);color:rgba(201,168,76,.7);cursor:pointer;transition:all .3s;';
+  skip.style.cssText='position:absolute;bottom:1.8rem;right:1.8rem;z-index:20;font-family:Outfit,sans-serif;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;padding:.42rem .95rem;border-radius:100px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);color:rgba(201,168,76,.7);cursor:pointer;transition:all .3s;';
   skip.onclick=()=>window.scrollTo({top:section.offsetTop+section.offsetHeight,behavior:'smooth'});
-  skip.onmouseenter=()=>{skip.style.background='rgba(201,168,76,.22)';skip.style.color='#C9A84C';};
-  skip.onmouseleave=()=>{skip.style.background='rgba(201,168,76,.1)';skip.style.color='rgba(201,168,76,.7)';};
+  skip.onmouseenter=()=>{skip.style.background='rgba(201,168,76,.25)';skip.style.color='#C9A84C';};
+  skip.onmouseleave=()=>{skip.style.background='rgba(201,168,76,.12)';skip.style.color='rgba(201,168,76,.7)';};
   sticky.appendChild(skip);
 
 })();
+
 
 
 // ═══════════════════════════════════
