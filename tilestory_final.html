@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tile Story — Premium Designer Tiles | Nungambakkam, Chennai</title>
+<meta name="description" content="Chennai's premier designer tile showroom. Premium flooring, Moroccan, large slab, bathroom and imported tiles.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Outfit:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --navy:#1B3A6B;--deep-navy:#0D2040;--gold:#C9A84C;--deep-gold:#B8922A;
+  --champagne:#E8D5A3;--parchment:#F5F0E8;--ivory:#FEFCF7;--brown:#7A4F2E;
+  --text-dark:#1a1a1a;--text-mid:#4a4a4a;
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+  --ease-smooth:cubic-bezier(.4,0,.2,1);
+}
+html{scroll-behavior:smooth;overflow-x:hidden;}
+body{background:var(--parchment);color:var(--text-dark);font-family:'DM Sans',sans-serif;overflow-x:hidden;cursor:none;}
+a{text-decoration:none;color:inherit;}
+img{display:block;max-width:100%;}
+
+/* ── CURSOR ── */
+.cursor-dot{position:fixed;width:7px;height:7px;background:var(--gold);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s;left:-100px;top:-100px;}
+.cursor-ring{position:fixed;width:32px;height:32px;border:1.5px solid rgba(201,168,76,.6);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s var(--ease-spring),height .3s var(--ease-spring);left:-100px;top:-100px;}
+.cursor-dot.hov{width:10px;height:10px;background:var(--navy);}
+.cursor-ring.hov{width:50px;height:50px;border-color:rgba(27,58,107,.5);}
+@media(max-width:768px){.cursor-dot,.cursor-ring{display:none;}body{cursor:auto;}}
+
+/* ── NAV ── */
+#nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 3rem;transition:all .4s var(--ease-smooth);}
+#nav.scrolled{background:rgba(245,240,232,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1.5px solid rgba(201,168,76,.25);padding:.8rem 3rem;box-shadow:0 4px 30px rgba(13,32,64,.1);}
+.nav-logo{display:flex;align-items:center;gap:.75rem;z-index:10;}
+.nav-logo-text{font-family:'Cinzel',serif;font-size:1rem;font-weight:600;color:#fff;letter-spacing:.15em;transition:color .3s;}
+#nav.scrolled .nav-logo-text{color:var(--deep-navy);}
+.nav-links{display:flex;align-items:center;gap:2.5rem;list-style:none;}
+.nav-links a{font-family:'Outfit',sans-serif;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.8);transition:color .3s;}
+#nav.scrolled .nav-links a{color:var(--text-mid);}
+.nav-links a:hover{color:var(--gold);}
+#nav.scrolled .nav-links a:hover{color:var(--deep-gold);}
+.nav-cta{background:var(--gold);color:var(--deep-navy)!important;padding:.55rem 1.4rem;border-radius:2px;font-weight:600!important;}
+.nav-cta:hover{background:var(--champagne)!important;}
+.burger{display:none;flex-direction:column;gap:5px;cursor:pointer;z-index:9999;background:none;border:none;padding:4px;}
+.burger span{display:block;width:22px;height:1.5px;background:#fff;transition:all .3s;}
+#nav.scrolled .burger span{background:var(--deep-navy);}
+.mob-nav{position:fixed;inset:0;background:var(--deep-navy);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem;transform:translateX(100%);transition:transform .45s var(--ease-smooth);}
+.mob-nav.open{transform:translateX(0);}
+.mob-nav a{font-family:'Cinzel',serif;font-size:1.4rem;color:rgba(255,255,255,.85);letter-spacing:.1em;transition:color .3s;}
+.mob-nav a:hover{color:var(--gold);}
+.mob-close{position:absolute;top:1.5rem;right:1.5rem;background:none;border:none;color:rgba(255,255,255,.5);font-size:1.5rem;cursor:pointer;}
+@media(max-width:900px){
+  .nav-links{display:none;}
+  .burger{display:flex;}
+  #nav{padding:1rem 1.5rem;}
+  #nav.scrolled{padding:.75rem 1.5rem;}
+}
+
+/* ════════════════════════════
+   SCROLL SCRUBBER — Apple Style
+   ════════════════════════════ */
+#scrubber{position:relative;height:500vh;background:#06080f;}
+#scrubber-sticky{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+
+/* CANVAS — for real frames when ready */
+#scrub-canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s;}
+#scrub-canvas.visible{opacity:1;}
+
+/* PLACEHOLDER — animated tile grid */
+#scrub-placeholder{position:absolute;inset:0;overflow:hidden;}
+.scrub-tile-grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(6,1fr);gap:2px;}
+.scrub-tile{background:var(--deep-navy);transition:all .3s;position:relative;overflow:hidden;}
+.scrub-tile::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(201,168,76,.1),transparent);opacity:0;transition:opacity .4s;}
+.scrub-tile.lit{background:#1a2f4b;}
+.scrub-tile.lit::after{opacity:1;}
+.scrub-tile.gold{background:linear-gradient(135deg,rgba(201,168,76,.3),rgba(184,146,42,.1));}
+.scrub-tile.gold::after{opacity:1;}
+
+/* DARK OVERLAY — fades out as scroll progresses */
+#scrub-dark{position:absolute;inset:0;background:#06080f;pointer-events:none;transition:opacity .1s;}
+
+/* TEXT OVERLAY */
+#scrub-overlay{position:relative;z-index:10;text-align:center;pointer-events:none;padding:2rem;}
+.scrub-eyebrow{font-family:'Outfit',sans-serif;font-size:.65rem;letter-spacing:.45em;text-transform:uppercase;color:var(--gold);opacity:0;transform:translateY(20px);transition:all .6s var(--ease-smooth);margin-bottom:1.2rem;}
+.scrub-title{font-family:'Cinzel',serif;font-size:clamp(2.5rem,7vw,6.5rem);font-weight:700;color:#fff;line-height:1;letter-spacing:.08em;opacity:0;transform:translateY(30px);transition:all .7s var(--ease-smooth) .1s;text-shadow:0 4px 40px rgba(0,0,0,.6);}
+.scrub-title em{color:var(--gold);font-style:normal;display:block;font-size:.6em;letter-spacing:.25em;margin-top:.3em;}
+.scrub-divider{width:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:1.5rem auto;transition:width 1s var(--ease-smooth) .3s;}
+.scrub-sub{font-family:'Cormorant Garamond',serif;font-size:clamp(1rem,2vw,1.4rem);font-weight:300;color:rgba(255,255,255,.7);letter-spacing:.1em;opacity:0;transform:translateY(20px);transition:all .7s var(--ease-smooth) .4s;}
+
+/* TEXT VISIBLE STATES */
+#scrub-overlay.show .scrub-eyebrow{opacity:1;transform:translateY(0);}
+#scrub-overlay.show .scrub-title{opacity:1;transform:translateY(0);}
+#scrub-overlay.show .scrub-divider{width:180px;}
+#scrub-overlay.show .scrub-sub{opacity:1;transform:translateY(0);}
+
+/* PROGRESS BAR */
+#scrub-progress{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:.6rem;}
+.scrub-prog-bar{width:80px;height:1px;background:rgba(255,255,255,.15);}
+.scrub-prog-fill{height:100%;background:var(--gold);width:0%;transition:width .05s;}
+.scrub-prog-text{font-family:'Outfit',sans-serif;font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.3);}
+
+/* SCROLL ARROW */
+#scrub-arrow{position:absolute;bottom:4rem;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:.4rem;opacity:.5;animation:arrowBounce 2s ease-in-out infinite;}
+.arrow-line{width:1px;height:44px;background:linear-gradient(to bottom,transparent,var(--gold));}
+.arrow-tip{width:7px;height:7px;border-right:1px solid var(--gold);border-bottom:1px solid var(--gold);transform:rotate(45deg) translate(-3px,-3px);}
+@keyframes arrowBounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(10px);}}
+
+/* ── HERO ── */
+#hero{min-height:100vh;background:var(--deep-navy);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.hero-bg{position:absolute;inset:0;}
+.hero-bg video{width:100%;height:100%;object-fit:cover;opacity:.28;filter:saturate(.8) brightness(.9);}
+.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,32,64,.6) 0%,rgba(13,32,64,.85) 100%);}
+.hero-grid-lines{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;}
+.hero-content{position:relative;z-index:2;text-align:center;padding:2rem;max-width:900px;}
+.hero-eyebrow{font-family:'Outfit',sans-serif;font-size:.65rem;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:1.5rem;display:flex;align-items:center;gap:.8rem;justify-content:center;}
+.eyebrow-line{display:inline-block;width:32px;height:1px;background:var(--gold);}
+.hero-title{font-family:'Cinzel',serif;font-size:clamp(2.8rem,7vw,6rem);font-weight:700;color:#fff;line-height:1;letter-spacing:.04em;}
+.hero-title em{color:var(--gold);font-style:normal;display:block;}
+.hero-sub{font-family:'Cormorant Garamond',serif;font-size:clamp(1rem,2vw,1.4rem);font-weight:300;color:rgba(255,255,255,.7);margin-top:1.5rem;line-height:1.8;max-width:560px;margin-left:auto;margin-right:auto;}
+.hero-divider{display:flex;align-items:center;gap:1rem;justify-content:center;margin:2rem auto;}
+.hero-divider::before,.hero-divider::after{content:'';flex:1;max-width:70px;height:1px;background:rgba(201,168,76,.4);}
+.hero-diamond{width:6px;height:6px;background:var(--gold);transform:rotate(45deg);}
+.hero-ctas{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:2rem;}
+.btn-gold{display:inline-flex;align-items:center;gap:.5rem;padding:.9rem 2.2rem;background:var(--gold);color:var(--deep-navy);font-family:'Outfit',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;border-radius:2px;transition:all .3s;border:1px solid var(--gold);}
+.btn-gold:hover{background:var(--champagne);border-color:var(--champagne);transform:translateY(-2px);box-shadow:0 8px 28px rgba(201,168,76,.3);}
+.btn-outline{display:inline-flex;align-items:center;gap:.5rem;padding:.9rem 2.2rem;border:1px solid rgba(201,168,76,.45);color:var(--champagne);font-family:'Outfit',sans-serif;font-size:.75rem;font-weight:400;letter-spacing:.15em;text-transform:uppercase;border-radius:2px;transition:all .3s;}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-2px);}
+.hero-stats{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:0;background:rgba(13,32,64,.7);border:1px solid rgba(201,168,76,.2);border-radius:2px;padding:.75rem 1.5rem;backdrop-filter:blur(12px);}
+.h-stat{text-align:center;padding:0 1.2rem;}
+.h-stat-v{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--gold);line-height:1;}
+.h-stat-l{font-family:'Outfit',sans-serif;font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:.25rem;}
+.stat-sep{width:1px;height:32px;background:rgba(201,168,76,.2);}
+
+/* ── SHARED SECTION ── */
+section{padding:7rem 2rem;}
+.container{max-width:1200px;margin:0 auto;}
+.sec-label{font-family:'Outfit',sans-serif;font-size:.62rem;letter-spacing:.38em;text-transform:uppercase;color:var(--gold);margin-bottom:.8rem;display:flex;align-items:center;gap:.6rem;}
+.sec-label::before{content:'';display:inline-block;width:20px;height:1px;background:var(--gold);}
+.sec-title{font-family:'Cinzel',serif;font-size:clamp(1.8rem,4.5vw,3.2rem);font-weight:600;color:var(--deep-navy);line-height:1.1;}
+.sec-title em{font-style:italic;color:var(--deep-gold);}
+.sec-title.light{color:#fff;}
+.sec-title.light em{color:var(--champagne);}
+.sec-divider{width:44px;height:2px;background:var(--gold);margin:1.4rem 0 2.5rem;}
+.sec-divider.center{margin-left:auto;margin-right:auto;}
+
+/* ── ABOUT ── */
+#about{background:var(--ivory);}
+.about-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:5rem;align-items:center;}
+@media(max-width:900px){.about-grid{grid-template-columns:1fr;gap:3rem;}}
+.about-img-wrap{position:relative;}
+.about-img-box{aspect-ratio:4/5;background:var(--deep-navy);border-radius:2px;overflow:hidden;border:1px solid rgba(201,168,76,.25);box-shadow:0 20px 60px rgba(13,32,64,.2);display:flex;align-items:center;justify-content:center;}
+.about-img-box img{width:100%;height:100%;object-fit:cover;}
+.about-img-placeholder{display:flex;flex-direction:column;align-items:center;gap:1rem;opacity:.2;color:var(--gold);}
+.about-badge{position:absolute;bottom:-1.5rem;right:-1.5rem;background:var(--gold);padding:1.6rem;text-align:center;box-shadow:0 8px 28px rgba(201,168,76,.3);}
+.about-badge .badge-num{font-family:'Cinzel',serif;font-size:2rem;font-weight:700;color:var(--deep-navy);line-height:1;}
+.about-badge .badge-label{font-family:'Outfit',sans-serif;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--deep-navy);margin-top:.25rem;opacity:.8;}
+.about-text p{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--text-mid);line-height:1.9;margin-bottom:1rem;}
+.about-tags{display:flex;flex-wrap:wrap;gap:.5rem;margin:1.5rem 0;}
+.tag{font-family:'Outfit',sans-serif;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .9rem;border-radius:100px;border:1px solid rgba(27,58,107,.15);color:var(--navy);background:rgba(27,58,107,.05);}
+.about-info{display:flex;flex-direction:column;gap:.75rem;padding:1.4rem;border:1px solid rgba(27,58,107,.1);border-radius:2px;background:rgba(27,58,107,.03);margin-top:1.5rem;}
+.info-row{font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--text-mid);display:flex;gap:.75rem;align-items:flex-start;line-height:1.5;}
+.info-ic{flex-shrink:0;color:var(--deep-gold);}
+
+/* ── COLLECTIONS SHOWCASE ── */
+#collections{background:var(--deep-navy);position:relative;overflow:hidden;}
+#collections::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.025) 1px,transparent 1px);background-size:50px 50px;}
+.coll-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(201,168,76,.08);margin-top:3.5rem;}
+@media(max-width:900px){.coll-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:500px){.coll-grid{grid-template-columns:1fr;}}
+.coll-card{background:var(--deep-navy);padding:2.5rem 2rem;transition:all .4s;position:relative;overflow:hidden;cursor:default;}
+.coll-card::after{content:'';position:absolute;left:0;bottom:0;width:0;height:2px;background:var(--gold);transition:width .5s;}
+.coll-card:hover{background:rgba(201,168,76,.04);}
+.coll-card:hover::after{width:100%;}
+.coll-icon{font-size:2rem;margin-bottom:1.2rem;display:block;opacity:.5;transition:opacity .3s;}
+.coll-card:hover .coll-icon{opacity:.9;}
+.coll-name{font-family:'Cinzel',serif;font-size:1rem;color:#fff;margin-bottom:.6rem;font-weight:400;letter-spacing:.05em;}
+.coll-desc{font-family:'DM Sans',sans-serif;font-size:.82rem;color:rgba(255,255,255,.4);line-height:1.7;}
+
+/* ── VISIT SHOWROOM ── */
+#visit{background:var(--parchment);position:relative;overflow:hidden;}
+.visit-inner{display:grid;grid-template-columns:1.2fr 1fr;gap:5rem;align-items:center;}
+@media(max-width:900px){.visit-inner{grid-template-columns:1fr;gap:3rem;}}
+.visit-text .sec-title{margin-bottom:1rem;}
+.visit-text p{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--text-mid);line-height:1.9;margin-bottom:1.5rem;}
+.visit-details{display:flex;flex-direction:column;gap:1.2rem;margin:2rem 0;}
+.visit-detail{display:flex;gap:1rem;align-items:flex-start;}
+.visit-detail-icon{width:44px;height:44px;border:1px solid rgba(201,168,76,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;background:rgba(201,168,76,.05);}
+.visit-detail-text .label{font-family:'Outfit',sans-serif;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--deep-gold);margin-bottom:.2rem;}
+.visit-detail-text .value{font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text-mid);line-height:1.6;}
+.visit-detail-text a{color:var(--deep-gold);}
+.visit-ctas{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:2rem;}
+.btn-wa{display:inline-flex;align-items:center;gap:.6rem;padding:.9rem 2rem;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-family:'Outfit',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border-radius:2px;transition:all .3s;border:none;cursor:pointer;}
+.btn-wa:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(37,211,102,.3);}
+.visit-map{background:var(--deep-navy);border:1px solid rgba(201,168,76,.2);border-radius:2px;overflow:hidden;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;position:relative;}
+.visit-map::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(201,168,76,.02) 0,rgba(201,168,76,.02) 1px,transparent 0,transparent 25px);}
+.visit-map-icon{font-size:3rem;opacity:.4;}
+.visit-map-text{font-family:'Outfit',sans-serif;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.3);}
+.visit-map-addr{font-family:'Cormorant Garamond',serif;font-size:1rem;color:rgba(255,255,255,.5);text-align:center;padding:0 1.5rem;}
+.visit-map-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1.2rem;border:1px solid rgba(201,168,76,.3);color:var(--gold);font-family:'Outfit',sans-serif;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;border-radius:100px;text-decoration:none;transition:all .3s;position:relative;z-index:1;background:transparent;}
+.visit-map-btn:hover{background:rgba(201,168,76,.1);border-color:var(--gold);}
+
+/* ── FEATURES ── */
+#features{background:var(--ivory);}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;margin-top:3.5rem;}
+@media(max-width:900px){.feat-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:550px){.feat-grid{grid-template-columns:1fr;}}
+.feat-card{padding:2.2rem 1.8rem;border:1px solid rgba(27,58,107,.1);border-radius:2px;background:#fff;transition:all .4s;position:relative;overflow:hidden;}
+.feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--deep-gold));transform:scaleX(0);transform-origin:left;transition:transform .4s;}
+.feat-card:hover{border-color:rgba(201,168,76,.3);box-shadow:0 12px 40px rgba(13,32,64,.08);transform:translateY(-4px);}
+.feat-card:hover::before{transform:scaleX(1);}
+.feat-icon{font-size:1.8rem;margin-bottom:1.2rem;display:block;}
+.feat-name{font-family:'Cinzel',serif;font-size:1rem;color:var(--deep-navy);margin-bottom:.6rem;font-weight:400;}
+.feat-desc{font-family:'DM Sans',sans-serif;font-size:.83rem;color:var(--text-mid);line-height:1.7;}
+
+/* ── REVIEWS ── */
+#reviews{background:var(--deep-navy);position:relative;}
+#reviews::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(201,168,76,.02) 0,rgba(201,168,76,.02) 1px,transparent 0,transparent 40px);}
+.rev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3.5rem;}
+@media(max-width:900px){.rev-grid{grid-template-columns:1fr;}}
+.rev-card{padding:2rem;border:1px solid rgba(201,168,76,.1);border-radius:2px;background:rgba(255,255,255,.03);transition:all .4s;position:relative;overflow:hidden;}
+.rev-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--deep-gold));opacity:0;transition:opacity .4s;}
+.rev-card:hover{border-color:rgba(201,168,76,.25);background:rgba(201,168,76,.03);}
+.rev-card:hover::before{opacity:1;}
+.rev-stars{color:var(--gold);font-size:.9rem;margin-bottom:.9rem;letter-spacing:2px;}
+.rev-text{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-style:italic;line-height:1.75;color:rgba(255,255,255,.7);margin-bottom:1.2rem;}
+.rev-name{font-family:'Outfit',sans-serif;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);}
+.rev-loc{font-family:'DM Sans',sans-serif;font-size:.72rem;color:rgba(255,255,255,.3);margin-top:.2rem;}
+
+/* ── INSTAGRAM ── */
+#instagram{background:var(--ivory);}
+.insta-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:3.5rem;justify-items:center;}
+@media(max-width:768px){.insta-grid{grid-template-columns:1fr;}}
+.insta-reel-wrap{width:100%;max-width:420px;}
+.insta-reel-frame{position:relative;width:100%;padding-bottom:177.77%;border-radius:4px;overflow:hidden;background:var(--deep-navy);border:1px solid rgba(201,168,76,.25);box-shadow:0 20px 60px rgba(13,32,64,.2);}
+.insta-iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000;}
+.insta-reel-btns{display:flex;gap:.6rem;margin-top:.9rem;justify-content:center;}
+.insta-reel-btns .btn-gold{flex:1;justify-content:center;font-size:.7rem;padding:.7rem 1rem;}
+.insta-reel-btns .btn-outline{flex:1;justify-content:center;font-size:.7rem;padding:.7rem 1rem;color:var(--deep-gold);border-color:rgba(201,168,76,.35);}
+
+/* REEL MODAL */
+.reel-modal{position:fixed;inset:0;z-index:2000;background:rgba(6,8,15,.92);backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center;padding:4rem 1.5rem;opacity:0;pointer-events:none;transition:opacity .4s;}
+.reel-modal.open{opacity:1;pointer-events:auto;}
+.reel-modal-inner{position:relative;width:min(400px,92vw);aspect-ratio:9/16;border-radius:4px;overflow:hidden;border:1px solid rgba(201,168,76,.25);box-shadow:0 30px 80px rgba(0,0,0,.7);transform:scale(.9);transition:transform .45s var(--ease-spring);}
+.reel-modal.open .reel-modal-inner{transform:scale(1);}
+.reel-modal-iframe{position:absolute;inset:0;width:100%;height:100%;border:none;}
+.reel-modal-close{position:absolute;top:-3rem;right:0;background:rgba(13,32,64,.95);border:1px solid rgba(201,168,76,.25);border-radius:100px;padding:.5rem 1.2rem;font-family:'Outfit',sans-serif;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.7);cursor:pointer;transition:all .3s;}
+.reel-modal-close:hover{border-color:var(--gold);color:var(--gold);}
+
+/* ── CONTACT ── */
+#contact{background:var(--parchment);}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start;margin-top:3.5rem;}
+@media(max-width:900px){.contact-grid{grid-template-columns:1fr;gap:3rem;}}
+.form-group{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem;}
+.form-group label{font-family:'Outfit',sans-serif;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-mid);}
+.form-group input,.form-group textarea,.form-group select{background:#fff;border:1px solid rgba(27,58,107,.15);color:var(--text-dark);padding:.82rem 1rem;font-family:'DM Sans',sans-serif;font-size:.88rem;border-radius:2px;outline:none;transition:border-color .3s;width:100%;}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--deep-gold);}
+.form-group textarea{height:110px;resize:vertical;}
+.form-group select option{background:#fff;}
+#contact-success{display:none;text-align:center;color:var(--deep-gold);font-family:'Outfit',sans-serif;font-size:.82rem;letter-spacing:.05em;margin-top:.75rem;}
+.contact-info{display:flex;flex-direction:column;gap:1.5rem;}
+.contact-info-item{display:flex;gap:1rem;align-items:flex-start;}
+.ci-icon{width:44px;height:44px;border:1px solid rgba(201,168,76,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1rem;background:rgba(201,168,76,.05);}
+.ci-label{font-family:'Outfit',sans-serif;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--deep-gold);margin-bottom:.25rem;}
+.ci-value{font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text-mid);line-height:1.6;}
+.ci-value a{color:var(--deep-gold);}
+.contact-rating{margin-top:2rem;padding:1.4rem;border:1px solid rgba(201,168,76,.2);border-radius:2px;background:rgba(201,168,76,.04);text-align:center;}
+.rating-stars{font-size:1.2rem;color:var(--gold);letter-spacing:3px;margin-bottom:.4rem;}
+.rating-text{font-family:'Outfit',sans-serif;font-size:.72rem;letter-spacing:.1em;color:var(--text-mid);}
+
+/* ── AI CHATBOT ── */
+.ai-chat-fab{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--deep-navy));box-shadow:0 6px 24px rgba(27,58,107,.45);cursor:pointer;display:flex;align-items:center;justify-content:center;border:2px solid rgba(201,168,76,.3);transition:all .3s;animation:fabPulse 3s ease-in-out infinite;}
+.ai-chat-fab:hover{transform:scale(1.1);box-shadow:0 10px 36px rgba(27,58,107,.6);}
+.ai-chat-fab.open{opacity:0;pointer-events:none;transform:scale(.8);}
+@keyframes fabPulse{0%,100%{box-shadow:0 6px 24px rgba(27,58,107,.45),0 0 0 0 rgba(201,168,76,.4);}50%{box-shadow:0 6px 24px rgba(27,58,107,.45),0 0 0 12px rgba(201,168,76,0);}}
+.ai-chat-fab svg{width:26px;height:26px;color:#fff;}
+.ai-chat-panel{position:fixed;bottom:2rem;right:2rem;z-index:9998;width:min(400px,calc(100vw - 2rem));height:min(580px,calc(100vh - 4rem));background:var(--ivory);border:1px solid rgba(27,58,107,.12);border-radius:4px;box-shadow:0 24px 70px rgba(13,32,64,.2);transform:translateY(120%) scale(.9);opacity:0;pointer-events:none;transition:all .5s var(--ease-spring);display:flex;flex-direction:column;overflow:hidden;}
+.ai-chat-panel.open{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;}
+.ai-chat-header{background:var(--deep-navy);padding:1rem 1.3rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.ai-chat-header-left{display:flex;align-items:center;gap:.7rem;}
+.ai-avatar{width:34px;height:34px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--deep-navy);}
+.ai-chat-title{font-family:'Cinzel',serif;font-size:.85rem;color:#fff;letter-spacing:.05em;}
+.ai-chat-status{font-family:'Outfit',sans-serif;font-size:.55rem;color:rgba(255,255,255,.4);margin-top:.1rem;}
+.ai-chat-close-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .3s;}
+.ai-chat-close-btn:hover{background:rgba(255,80,80,.2);color:#ff8888;}
+.ai-chat-messages{flex:1;overflow-y:auto;padding:1.2rem;display:flex;flex-direction:column;gap:.9rem;}
+.ai-chat-messages::-webkit-scrollbar{width:3px;}
+.ai-chat-messages::-webkit-scrollbar-thumb{background:rgba(27,58,107,.2);border-radius:2px;}
+.ai-msg{max-width:82%;}
+.ai-msg.bot{align-self:flex-start;}
+.ai-msg.user{align-self:flex-end;}
+.ai-msg-bubble{padding:.7rem 1rem;font-family:'DM Sans',sans-serif;font-size:.84rem;line-height:1.6;border-radius:4px;}
+.ai-msg.bot .ai-msg-bubble{background:#fff;border:1px solid rgba(27,58,107,.1);color:var(--text-dark);border-radius:2px 10px 10px 10px;}
+.ai-msg.user .ai-msg-bubble{background:var(--navy);color:#fff;border-radius:10px 2px 10px 10px;}
+.ai-suggestions-row{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem;}
+.ai-sug{font-family:'DM Sans',sans-serif;font-size:.72rem;color:var(--navy);background:rgba(27,58,107,.06);border:1px solid rgba(27,58,107,.15);border-radius:100px;padding:.32rem .75rem;cursor:pointer;transition:all .2s;}
+.ai-sug:hover{background:var(--navy);color:#fff;}
+.ai-typing{align-self:flex-start;display:none;}
+.ai-typing-dots{display:flex;gap:4px;padding:.7rem 1rem;background:#fff;border:1px solid rgba(27,58,107,.1);border-radius:2px 10px 10px 10px;}
+.ai-typing-dot{width:5px;height:5px;background:var(--navy);border-radius:50%;animation:typingDot 1.2s infinite;}
+.ai-typing-dot:nth-child(2){animation-delay:.2s;}
+.ai-typing-dot:nth-child(3){animation-delay:.4s;}
+@keyframes typingDot{0%,80%,100%{opacity:.2;transform:scale(.8);}40%{opacity:1;transform:scale(1.1);}}
+.ai-product-pill{display:inline-block;background:rgba(201,168,76,.12);color:var(--deep-gold);padding:.2rem .6rem;border-radius:2px;font-size:.75rem;margin:.15rem;cursor:pointer;border:1px solid rgba(201,168,76,.25);transition:all .2s;}
+.ai-product-pill:hover{background:rgba(201,168,76,.25);}
+.ai-chat-input-row{display:flex;border-top:1px solid rgba(27,58,107,.1);flex-shrink:0;}
+.ai-chat-input-row input{flex:1;border:none;padding:.9rem 1.1rem;font-family:'DM Sans',sans-serif;font-size:.85rem;background:#fff;outline:none;color:var(--text-dark);}
+.ai-chat-input-row input::placeholder{color:rgba(0,0,0,.3);}
+.ai-chat-send{background:var(--navy);border:none;padding:0 1.1rem;cursor:pointer;color:#fff;font-size:1rem;transition:background .2s;}
+.ai-chat-send:hover{background:var(--deep-navy);}
+
+/* ── VISUAL LENS ── */
+.vl-modal{position:fixed;inset:0;z-index:99999;background:#06080f;display:none;}
+.vl-modal.open{display:block;}
+.vl-close{position:absolute;top:1.2rem;left:1.2rem;z-index:50;width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,.9);border:1px solid rgba(255,255,255,.15);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;}
+.vl-close:hover{background:rgba(255,80,80,.3);}
+.vl-brand{position:absolute;top:1.2rem;left:50%;transform:translateX(-50%);z-index:40;font-family:'Outfit',sans-serif;font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(255,255,255,.7);background:rgba(0,0,0,.85);padding:.55rem 1.2rem;border-radius:100px;border:1px solid rgba(27,58,107,.3);white-space:nowrap;}
+.vl-home{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;}
+.vl-home.hide{display:none;}
+.vl-hero-icon{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,rgba(27,58,107,.4),rgba(201,168,76,.2));border:2px solid rgba(27,58,107,.5);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;box-shadow:0 0 50px rgba(27,58,107,.4);}
+.vl-hero-title{font-family:'Cinzel',serif;font-size:clamp(1.8rem,5vw,2.8rem);font-weight:400;color:#fff;text-align:center;margin-bottom:.6rem;line-height:1.1;}
+.vl-hero-title em{font-style:italic;color:var(--gold);}
+.vl-hero-sub{font-family:'Cormorant Garamond',serif;font-size:1rem;color:rgba(255,255,255,.55);text-align:center;max-width:360px;line-height:1.7;margin-bottom:2.5rem;}
+.vl-action-row{display:flex;gap:.8rem;width:100%;max-width:400px;justify-content:center;}
+.vl-btn{flex:1;padding:1.1rem 1rem;border-radius:4px;border:none;font-family:'Outfit',sans-serif;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.45rem;transition:all .3s;}
+.vl-btn svg{width:24px;height:24px;}
+.vl-btn-cam{background:linear-gradient(135deg,var(--navy),var(--deep-navy));color:var(--gold);box-shadow:0 6px 20px rgba(27,58,107,.4);}
+.vl-btn-gal{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);}
+.vl-btn:hover{transform:translateY(-3px);}
+.vl-cam-view{position:absolute;inset:0;display:none;}
+.vl-cam-view.show{display:block;}
+.vl-cam-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.vl-cam-shutter{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);width:70px;height:70px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.vl-cam-shutter:active{transform:translateX(-50%) scale(.92);}
+.vl-cam-shutter-inner{width:52px;height:52px;border-radius:50%;background:#fff;border:2px solid #000;}
+.vl-analyzing{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(6,8,15,.95);}
+.vl-analyzing.show{display:flex;}
+.vl-ana-img{width:220px;height:220px;border-radius:4px;overflow:hidden;border:2px solid var(--navy);box-shadow:0 0 50px rgba(27,58,107,.4);margin:0 auto 1.5rem;position:relative;}
+.vl-ana-img img{width:100%;height:100%;object-fit:cover;}
+.vl-scan-line{position:absolute;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent);box-shadow:0 0 16px var(--gold);animation:scan 1.5s ease-in-out infinite;}
+@keyframes scan{0%{top:0;}50%{top:calc(100% - 3px);}100%{top:0;}}
+.vl-ana-title{font-family:'Cinzel',serif;font-size:1.4rem;color:#fff;text-align:center;margin-bottom:.4rem;}
+.vl-ana-sub{font-family:'Outfit',sans-serif;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);text-align:center;margin-bottom:1.2rem;}
+.vl-ana-dots{display:flex;justify-content:center;gap:.4rem;}
+.vl-ana-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);animation:anaDot 1.2s infinite;}
+.vl-ana-dot:nth-child(2){animation-delay:.2s;}
+.vl-ana-dot:nth-child(3){animation-delay:.4s;}
+@keyframes anaDot{0%,80%,100%{opacity:.2;transform:scale(.75);}40%{opacity:1;transform:scale(1.2);}}
+.vl-results{position:absolute;inset:0;display:none;overflow-y:auto;background:linear-gradient(180deg,#06080f,#0b1220);}
+.vl-results.show{display:block;}
+.vl-res-top{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:.8rem;padding:1rem 1.2rem;background:rgba(6,8,15,.96);border-bottom:1px solid rgba(27,58,107,.2);}
+.vl-res-thumb{width:44px;height:44px;border-radius:4px;overflow:hidden;border:1px solid rgba(27,58,107,.4);}
+.vl-res-thumb img{width:100%;height:100%;object-fit:cover;}
+.vl-res-info{flex:1;}
+.vl-res-label{font-family:'Outfit',sans-serif;font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:.2rem;}
+.vl-res-count{font-family:'Cinzel',serif;font-size:.88rem;color:#fff;}
+.vl-res-retry{width:40px;height:40px;border-radius:50%;background:rgba(27,58,107,.15);border:1px solid rgba(27,58,107,.3);color:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;}
+.vl-res-retry:hover{background:rgba(27,58,107,.3);transform:rotate(180deg);}
+.vl-palette{display:flex;align-items:center;gap:.6rem;padding:.7rem 1.2rem;background:rgba(27,58,107,.1);border-bottom:1px solid rgba(27,58,107,.15);overflow-x:auto;}
+.vl-pal-label{font-family:'Outfit',sans-serif;font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);white-space:nowrap;}
+.vl-pal-c{width:28px;height:28px;border-radius:4px;border:1px solid rgba(255,255,255,.15);flex-shrink:0;}
+.vl-res-body{padding:1.2rem;}
+.vl-res-title{font-family:'Cinzel',serif;font-size:1.1rem;color:#fff;margin-bottom:1rem;}
+.vl-res-title em{font-style:italic;color:var(--gold);}
+.vl-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;}
+@media(min-width:768px){.vl-grid{grid-template-columns:repeat(4,1fr);}}
+.vl-card{border-radius:4px;overflow:hidden;background:rgba(27,58,107,.15);border:1px solid rgba(27,58,107,.2);cursor:pointer;transition:all .3s;position:relative;}
+.vl-card:hover{border-color:var(--gold);transform:translateY(-3px);}
+.vl-card-img{aspect-ratio:1;overflow:hidden;}
+.vl-card-img img{width:100%;height:100%;object-fit:cover;transition:transform .4s;}
+.vl-card:hover .vl-card-img img{transform:scale(1.08);}
+.vl-card-shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,8,15,.9),transparent 50%);}
+.vl-card-info{position:absolute;bottom:0;left:0;right:0;padding:.6rem .7rem;}
+.vl-card-cat{font-family:'Outfit',sans-serif;font-size:.5rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:.2rem;}
+.vl-card-name{font-family:'Cinzel',serif;font-size:.75rem;color:#fff;line-height:1.2;}
+.vl-match-badge{position:absolute;top:.5rem;right:.5rem;font-family:'Outfit',sans-serif;font-size:.58rem;font-weight:700;padding:.25rem .5rem;border-radius:2px;backdrop-filter:blur(8px);}
+.vl-match-badge.gold{background:linear-gradient(135deg,#F7CD6B,#EAAA3F);color:#1a0f00;}
+.vl-match-badge.silver{background:linear-gradient(135deg,#E0E0E0,#B0B0B0);color:#000;}
+.vl-match-badge.bronze{background:linear-gradient(135deg,#CD7F32,#A05A1F);color:#fff;}
+
+/* ── FOOTER ── */
+footer{background:var(--deep-navy);padding:3rem 2rem;border-top:1px solid rgba(201,168,76,.15);}
+.footer-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;}
+.footer-brand{display:flex;align-items:center;gap:.75rem;}
+.footer-name{font-family:'Cinzel',serif;font-size:.9rem;letter-spacing:.15em;color:var(--champagne);}
+.footer-copy{font-family:'Outfit',sans-serif;font-size:.58rem;letter-spacing:.08em;color:rgba(255,255,255,.25);margin-top:.25rem;}
+.footer-links{display:flex;gap:1.8rem;flex-wrap:wrap;}
+.footer-links a{font-family:'Outfit',sans-serif;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);transition:color .3s;}
+.footer-links a:hover{color:var(--gold);}
+.admin-link{font-family:'Outfit',sans-serif;font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;padding:.4rem .85rem;border-radius:100px;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.25);background:transparent;cursor:pointer;transition:all .3s;}
+.admin-link:hover{border-color:rgba(201,168,76,.25);color:var(--gold);}
+
+/* ── WA FLOAT ── */
+.wa-float{position:fixed;bottom:1.5rem;left:1.5rem;z-index:9997;width:52px;height:52px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:1.4rem;box-shadow:0 4px 20px rgba(37,211,102,.4);transition:transform .3s;}
+.wa-float:hover{transform:scale(1.1);}
+
+/* ── REVEAL ── */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .85s var(--ease-smooth),transform .85s var(--ease-smooth);}
+.reveal.in{opacity:1;transform:translateY(0);}
+.d1{transition-delay:.1s;}.d2{transition-delay:.2s;}.d3{transition-delay:.3s;}.d4{transition-delay:.4s;}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  section{padding:5rem 1.2rem;}
+  .about-grid,.visit-inner,.contact-grid{grid-template-columns:1fr!important;gap:2.5rem!important;}
+  .feat-grid{grid-template-columns:1fr!important;}
+  .rev-grid{grid-template-columns:1fr!important;}
+  .coll-grid{grid-template-columns:1fr 1fr!important;}
+  .hero-stats{flex-wrap:wrap;gap:.5rem;padding:.6rem 1rem;}
+  .h-stat{padding:0 .6rem;}
+  .ai-chat-panel{bottom:0;right:0;left:0;width:100%;height:88vh;border-radius:4px 4px 0 0;}
+  .footer-inner{flex-direction:column;text-align:center;}
+  .footer-links{justify-content:center;}
+  .scrub-tile-grid{grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(8,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div class="cursor-dot" id="cDot"></div>
+<div class="cursor-ring" id="cRing"></div>
+
+<!-- WA FLOAT -->
+<a href="https://wa.me/918939135853?text=Hi%20Tile%20Story!%20I%20visited%20your%20website%20and%20I%27m%20interested%20in%20your%20tiles." class="wa-float" target="_blank" title="Chat on WhatsApp">💬</a>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">
+    <svg width="36" height="36" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="47" fill="rgba(13,32,64,.6)" stroke="rgba(201,168,76,.4)" stroke-width="1.5"/>
+      <polygon points="50,10 87,47 50,50" fill="#3D5A8A" opacity=".92"/>
+      <polygon points="50,50 90,50 50,90" fill="#C9A84C" opacity=".92"/>
+      <polygon points="50,50 10,50 50,90" fill="#6E8AB8" opacity=".88"/>
+      <polygon points="50,10 13,47 50,50" fill="#E8D5A3" opacity=".88"/>
+    </svg>
+    <span class="nav-logo-text">TILE STORY</span>
+  </a>
+  <button class="burger" id="burger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#collections">Collections</a></li>
+    <li><a href="#visit">Showroom</a></li>
+    <li><a href="#reviews">Reviews</a></li>
+    <li><a href="#instagram">Instagram</a></li>
+    <li><a href="#contact" class="nav-cta">Contact Us</a></li>
+  </ul>
+</nav>
+
+<!-- MOBILE NAV -->
+<div class="mob-nav" id="mobNav">
+  <button class="mob-close" id="mobClose">✕</button>
+  <a href="#about" onclick="closeMob()">About</a>
+  <a href="#collections" onclick="closeMob()">Collections</a>
+  <a href="#visit" onclick="closeMob()">Showroom</a>
+  <a href="#reviews" onclick="closeMob()">Reviews</a>
+  <a href="#instagram" onclick="closeMob()">Instagram</a>
+  <a href="#contact" onclick="closeMob()">Contact</a>
+</div>
+
+<!-- ════ SCROLL SCRUBBER ════ -->
+<section id="scrubber">
+  <div id="scrubber-sticky">
+
+    <!-- PLACEHOLDER TILE GRID -->
+    <div id="scrub-placeholder">
+      <div class="scrub-tile-grid" id="tileGrid"></div>
+    </div>
+
+    <!-- CANVAS (for real frames — swap src when you have MP4) -->
+    <canvas id="scrub-canvas"></canvas>
+
+    <!-- DARK OVERLAY -->
+    <div id="scrub-dark"></div>
+
+    <!-- TEXT -->
+    <div id="scrub-overlay">
+      <div class="scrub-eyebrow">Chennai's Premier Tile Destination</div>
+      <div class="scrub-title">TILE STORY<em>Where Design Meets</em></div>
+      <div class="scrub-divider"></div>
+      <div class="scrub-sub">300+ Premium Tiles · Nungambakkam</div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div id="scrub-progress">
+      <div class="scrub-prog-bar"><div class="scrub-prog-fill" id="progFill"></div></div>
+      <div class="scrub-prog-text" id="progText">Scroll to explore</div>
+    </div>
+
+    <!-- ARROW -->
+    <div id="scrub-arrow">
+      <div class="arrow-line"></div>
+      <div class="arrow-tip"></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ════ HERO ════ -->
+<section id="hero">
+  <div class="hero-bg">
+    <video autoplay muted loop playsinline preload="auto">
+      <source src="hero_bg.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="hero-grid-lines"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow"><span class="eyebrow-line"></span>Premium Designer Tiles<span class="eyebrow-line"></span></div>
+    <h1 class="hero-title">Surfaces That<em>Speak Luxury</em></h1>
+    <p class="hero-sub">300+ premium tiles curated for discerning spaces. From Nungambakkam to your dream home — Italian marble, Moroccan patterns, grand slabs.</p>
+    <div class="hero-divider"><div class="hero-diamond"></div></div>
+    <div class="hero-ctas">
+      <a href="#visit" class="btn-gold">Visit Showroom ✦</a>
+      <a href="#collections" class="btn-outline">Explore Collections</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="h-stat"><div class="h-stat-v">4.85★</div><div class="h-stat-l">Google Rating</div></div>
+    <div class="stat-sep"></div>
+    <div class="h-stat"><div class="h-stat-v">300+</div><div class="h-stat-l">Tile Collections</div></div>
+    <div class="stat-sep"></div>
+    <div class="h-stat"><div class="h-stat-v">⚡ Same Day</div><div class="h-stat-l">Delivery</div></div>
+  </div>
+</section>
+
+<!-- ════ ABOUT ════ -->
+<section id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-img-wrap reveal">
+        <div class="about-img-box">
+          <img src="WhatsApp_Image_2026-04-21_at_8_31_48_PM.webp" alt="Tile Story Showroom" onerror="this.parentElement.innerHTML='<div class=about-img-placeholder><svg width=60 height=60 viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'1\'><rect x=\'3\' y=\'3\' width=\'18\' height=\'18\' rx=\'1\'/><path d=\'M3 9h18M3 15h18M9 3v18M15 3v18\'/></svg><span style=\'font-family:Outfit,sans-serif;font-size:.7rem;letter-spacing:.2em\'>SHOWROOM PHOTO</span></div>'">
+        </div>
+        <div class="about-badge">
+          <div class="badge-num">4.85</div>
+          <div class="badge-label">★ Google Rating</div>
+        </div>
+      </div>
+      <div class="reveal d2">
+        <div class="sec-label">Our Story</div>
+        <h2 class="sec-title">Redefining <em>Spaces,</em><br>One Tile at a Time</h2>
+        <div class="sec-divider"></div>
+        <div class="about-tags">
+          <span class="tag">Flooring</span><span class="tag">Bathroom</span><span class="tag">Moroccan</span>
+          <span class="tag">Large Slab</span><span class="tag">Designer</span><span class="tag">Imported</span>
+          <span class="tag">Elevation</span><span class="tag">Parking</span>
+        </div>
+        <p class="about-text">At Tile Story, every surface is a canvas. Our 300+ curated tile collection spans continents — Italian marble, Moroccan zellige, Spanish concrete — each selected for character, durability, and timeless beauty.</p>
+        <div class="about-info">
+          <div class="info-row"><span class="info-ic">📍</span><span>1 Sterling Road, Opposite Hard Rock Cafe, Nungambakkam, Chennai 600034</span></div>
+          <div class="info-row"><span class="info-ic">🕐</span><span>Mon–Sat: 9:00 AM – 7:00 PM · Sunday: 10:00 AM – 5:00 PM</span></div>
+          <div class="info-row"><span class="info-ic">📞</span><span><a href="tel:+918939135853">+91 89391 35853</a></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ COLLECTIONS ════ -->
+<section id="collections">
+  <div class="container">
+    <div style="text-align:center" class="reveal">
+      <div class="sec-label" style="justify-content:center;color:var(--gold)">What We Offer</div>
+      <h2 class="sec-title light">Premium <em>Collections</em></h2>
+      <div class="sec-divider center"></div>
+    </div>
+    <div class="coll-grid">
+      <div class="coll-card reveal"><span class="coll-icon">🏠</span><div class="coll-name">Flooring</div><div class="coll-desc">From Nordic wood-look to classic Carrara marble. Large format slabs up to 1600×3200mm.</div></div>
+      <div class="coll-card reveal d1"><span class="coll-icon">🚿</span><div class="coll-name">Bathroom</div><div class="coll-desc">Luxury wall and floor tiles. Nero Marquina black, Pearl White subway, Azure Gold.</div></div>
+      <div class="coll-card reveal d2"><span class="coll-icon">🌀</span><div class="coll-name">Moroccan</div><div class="coll-desc">Handcrafted zellige patterns. Fes blue, Marrakech mix, geometric hexagon mosaics.</div></div>
+      <div class="coll-card reveal d3"><span class="coll-icon">🪨</span><div class="coll-name">Large Slabs</div><div class="coll-desc">Book-matched Calacatta Gold, Statuario White, Platinum Vein. Statement surfaces.</div></div>
+      <div class="coll-card reveal"><span class="coll-icon">✈️</span><div class="coll-name">Imported</div><div class="coll-desc">Italian Statuario, Spanish concrete, Tuscan terracotta. Directly sourced from origin.</div></div>
+      <div class="coll-card reveal d1"><span class="coll-icon">🏗️</span><div class="coll-name">Elevation</div><div class="coll-desc">Exterior facade cladding, sandstone villas, classic brick. Weather-resistant finishes.</div></div>
+      <div class="coll-card reveal d2"><span class="coll-icon">🎨</span><div class="coll-name">Designer</div><div class="coll-desc">3D wave panels, terracotta earth tones, industrial concrete. Contemporary statements.</div></div>
+      <div class="coll-card reveal d3"><span class="coll-icon">🚗</span><div class="coll-name">Parking</div><div class="coll-desc">Heavy-duty anti-slip hexagon and diamond grid tiles for outdoor and parking areas.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ VISIT SHOWROOM ════ -->
+<section id="visit">
+  <div class="container">
+    <div class="visit-inner">
+      <div class="reveal">
+        <div class="sec-label">Come See Us</div>
+        <h2 class="sec-title">Visit Our <em>Showroom</em></h2>
+        <div class="sec-divider"></div>
+        <p>Experience our 300+ tile collection in person. Our design consultants will guide you through every collection, help you visualize the final look, and find the perfect tile for your space and budget.</p>
+        <div class="visit-details">
+          <div class="visit-detail">
+            <div class="visit-detail-icon">📍</div>
+            <div class="visit-detail-text">
+              <div class="label">Address</div>
+              <div class="value">1 Sterling Road, Opposite Hard Rock Cafe<br>Nungambakkam, Chennai 600034</div>
+            </div>
+          </div>
+          <div class="visit-detail">
+            <div class="visit-detail-icon">🕐</div>
+            <div class="visit-detail-text">
+              <div class="label">Opening Hours</div>
+              <div class="value">Mon – Sat: 9:00 AM – 7:00 PM<br>Sunday: 10:00 AM – 5:00 PM</div>
+            </div>
+          </div>
+          <div class="visit-detail">
+            <div class="visit-detail-icon">📞</div>
+            <div class="visit-detail-text">
+              <div class="label">Call / WhatsApp</div>
+              <div class="value"><a href="tel:+918939135853">+91 89391 35853</a></div>
+            </div>
+          </div>
+          <div class="visit-detail">
+            <div class="visit-detail-icon">⭐</div>
+            <div class="visit-detail-text">
+              <div class="label">Google Rating</div>
+              <div class="value">★★★★★ 4.85 / 5.0 · Verified</div>
+            </div>
+          </div>
+        </div>
+        <div class="visit-ctas">
+          <a href="https://wa.me/918939135853?text=Hi!%20I%27d%20like%20to%20visit%20your%20showroom%20and%20see%20your%20tile%20collection." target="_blank" class="btn-wa">💬 WhatsApp Us</a>
+          <a href="tel:+918939135853" class="btn-gold">📞 Call Now</a>
+          <a href="https://maps.google.com/?q=1+Sterling+Road+Nungambakkam+Chennai" target="_blank" class="btn-outline" style="color:var(--deep-gold);border-color:rgba(201,168,76,.35);">🗺️ Get Directions</a>
+        </div>
+      </div>
+      <div class="reveal d2">
+        <div class="visit-map">
+          <div class="visit-map-icon">🗺️</div>
+          <div class="visit-map-text">Find Us At</div>
+          <div class="visit-map-addr">1 Sterling Road, Opposite Hard Rock Cafe, Nungambakkam, Chennai 600034</div>
+          <a href="https://maps.google.com/?q=Tile+Story+1+Sterling+Road+Nungambakkam+Chennai" target="_blank" class="visit-map-btn">Open in Google Maps ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ FEATURES ════ -->
+<section id="features">
+  <div class="container">
+    <div style="text-align:center" class="reveal">
+      <div class="sec-label" style="justify-content:center;">Why Choose Us</div>
+      <h2 class="sec-title">The Tile Story <em>Difference</em></h2>
+      <div class="sec-divider center"></div>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card reveal"><span class="feat-icon">🤖</span><div class="feat-name">AI Design Assistant</div><div class="feat-desc">Describe your dream space and our AI instantly recommends the perfect tiles. Available 24/7, zero waiting.</div></div>
+      <div class="feat-card reveal d1"><span class="feat-icon">🔍</span><div class="feat-name">Visual Lens</div><div class="feat-desc">Upload any photo. Our AI analyzes colors and textures to find matching tiles with up to 95% accuracy.</div></div>
+      <div class="feat-card reveal d2"><span class="feat-icon">🏛️</span><div class="feat-name">300+ Curated Tiles</div><div class="feat-desc">Every tile handpicked from across the world. Italian marble, Moroccan zellige — only the finest quality.</div></div>
+      <div class="feat-card reveal"><span class="feat-icon">📐</span><div class="feat-name">Expert Consultation</div><div class="feat-desc">Our in-house design consultants help plan tile layouts, calculate quantities, and visualize the final look.</div></div>
+      <div class="feat-card reveal d1"><span class="feat-icon">⚡</span><div class="feat-name">Same-Day Delivery</div><div class="feat-desc">Order in the morning, delivered the same afternoon. Fast and reliable across all of Chennai.</div></div>
+      <div class="feat-card reveal d2"><span class="feat-icon">💬</span><div class="feat-name">WhatsApp Ordering</div><div class="feat-desc">Shortlist your tiles, share links on WhatsApp, and get pricing without leaving your seat.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ REVIEWS ════ -->
+<section id="reviews">
+  <div class="container">
+    <div style="text-align:center" class="reveal">
+      <div class="sec-label" style="justify-content:center;color:var(--gold)">Customer Stories</div>
+      <h2 class="sec-title light">What Our <em>Clients Say</em></h2>
+      <div class="sec-divider center"></div>
+    </div>
+    <div class="rev-grid">
+      <div class="rev-card reveal">
+        <div class="rev-stars">★★★★★</div>
+        <p class="rev-text">"Absolutely stunning collection. Found the perfect Moroccan tiles for my living room — quality unmatched anywhere in Chennai."</p>
+        <div class="rev-name">Priya Krishnan</div>
+        <div class="rev-loc">Adyar, Chennai</div>
+      </div>
+      <div class="rev-card reveal d1">
+        <div class="rev-stars">★★★★★</div>
+        <p class="rev-text">"Same-day delivery is real! Ordered large slab tiles in the morning, had them ready by afternoon. Exceptional service."</p>
+        <div class="rev-name">Arjun Mehta</div>
+        <div class="rev-loc">Anna Nagar</div>
+      </div>
+      <div class="rev-card reveal d2">
+        <div class="rev-stars">★★★★★</div>
+        <p class="rev-text">"The team helped us select perfect bathroom tiles matching our exact vision. The imported collection is breathtaking."</p>
+        <div class="rev-name">Divya Raman</div>
+        <div class="rev-loc">Velachery</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ INSTAGRAM ════ -->
+<section id="instagram">
+  <div class="container">
+    <div style="text-align:center" class="reveal">
+      <div class="sec-label" style="justify-content:center;">Follow Our Journey</div>
+      <h2 class="sec-title">Tile Story on <em>Instagram</em></h2>
+      <div class="sec-divider center"></div>
+    </div>
+    <div class="insta-grid">
+      <div class="insta-reel-wrap reveal">
+        <div class="insta-reel-frame">
+          <iframe id="reel1" class="insta-iframe" src="about:blank" data-src="https://www.instagram.com/reel/DUaeamekywE/embed/" allowfullscreen allowtransparency frameborder="0" scrolling="no"></iframe>
+        </div>
+        <div class="insta-reel-btns">
+          <button class="btn-gold" onclick="playReel('1')">▶ Watch Reel</button>
+          <a class="btn-outline" href="https://www.instagram.com/reel/DUaeamekywE/" target="_blank">📸 Instagram</a>
+        </div>
+      </div>
+      <div class="insta-reel-wrap reveal d2">
+        <div class="insta-reel-frame">
+          <iframe id="reel2" class="insta-iframe" src="about:blank" data-src="https://www.instagram.com/reel/DUQX3eXkwOS/embed/" allowfullscreen allowtransparency frameborder="0" scrolling="no"></iframe>
+        </div>
+        <div class="insta-reel-btns">
+          <button class="btn-gold" onclick="playReel('2')">▶ Watch Reel</button>
+          <a class="btn-outline" href="https://www.instagram.com/reel/DUQX3eXkwOS/" target="_blank">📸 Instagram</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REEL MODAL -->
+<div class="reel-modal" id="reelModal" onclick="if(event.target===this)closeReel()">
+  <div class="reel-modal-inner">
+    <button class="reel-modal-close" onclick="closeReel()">✕ Close</button>
+    <iframe class="reel-modal-iframe" id="reelModalFrame" src="about:blank" allowfullscreen allowtransparency frameborder="0" scrolling="no"></iframe>
+  </div>
+</div>
+
+<!-- ════ CONTACT ════ -->
+<section id="contact">
+  <div class="container">
+    <div class="reveal">
+      <div class="sec-label">Get In Touch</div>
+      <h2 class="sec-title">Send Us an <em>Enquiry</em></h2>
+      <div class="sec-divider"></div>
+    </div>
+    <div class="contact-grid">
+      <div class="reveal d1">
+        <div class="form-group"><label>Your Name</label><input type="text" id="cName" placeholder="Eg. Priya Krishnan"></div>
+        <div class="form-group"><label>Phone Number</label><input type="tel" id="cPhone" placeholder="+91 98765 43210"></div>
+        <div class="form-group">
+          <label>Looking For</label>
+          <select id="cRoom">
+            <option value="">Select room type</option>
+            <option>Living Room</option><option>Bedroom</option><option>Bathroom</option>
+            <option>Kitchen</option><option>Parking / Outdoor</option>
+            <option>Elevation / Exterior</option><option>Lobby / Commercial</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Message</label><textarea id="cMsg" placeholder="Tell us about your project..."></textarea></div>
+        <button class="btn-wa" onclick="sendWA()" style="width:100%;justify-content:center;border:none;cursor:pointer;font-family:'Outfit',sans-serif;">💬 Send via WhatsApp</button>
+        <div id="contact-success">✓ Opening WhatsApp...</div>
+      </div>
+      <div class="reveal d2">
+        <div class="contact-info">
+          <div class="contact-info-item"><div class="ci-icon">📍</div><div><div class="ci-label">Address</div><div class="ci-value">1 Sterling Road, Nungambakkam<br>Chennai 600034</div></div></div>
+          <div class="contact-info-item"><div class="ci-icon">📞</div><div><div class="ci-label">Phone</div><div class="ci-value"><a href="tel:+918939135853">+91 89391 35853</a></div></div></div>
+          <div class="contact-info-item"><div class="ci-icon">🕐</div><div><div class="ci-label">Hours</div><div class="ci-value">Mon–Sat: 9AM–7PM<br>Sunday: 10AM–5PM</div></div></div>
+          <div class="contact-info-item"><div class="ci-icon">📸</div><div><div class="ci-label">Instagram</div><div class="ci-value"><a href="https://instagram.com/tilestory" target="_blank">@tilestory</a></div></div></div>
+        </div>
+        <div class="contact-rating">
+          <div class="rating-stars">★★★★★</div>
+          <div class="rating-text">4.85 / 5.0 · Google Verified Reviews</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ FOOTER ════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <svg width="28" height="28" viewBox="0 0 100 100"><circle cx="50" cy="50" r="47" fill="rgba(13,32,64,.6)" stroke="rgba(201,168,76,.3)" stroke-width="1.5"/><polygon points="50,10 87,47 50,50" fill="#3D5A8A"/><polygon points="50,50 90,50 50,90" fill="#C9A84C"/><polygon points="50,50 10,50 50,90" fill="#6E8AB8"/><polygon points="50,10 13,47 50,50" fill="#E8D5A3"/></svg>
+      <div><div class="footer-name">TILE STORY</div><div class="footer-copy">© 2026 · Nungambakkam, Chennai · Made by ASH-DEV</div></div>
+    </div>
+    <nav class="footer-links">
+      <a href="#about">About</a><a href="#collections">Collections</a>
+      <a href="#visit">Showroom</a><a href="#reviews">Reviews</a><a href="#contact">Contact</a>
+    </nav>
+    <button class="admin-link" onclick="openAdmin()">Admin ↗</button>
+  </div>
+</footer>
+
+<!-- ════ AI CHATBOT ════ -->
+<button class="ai-chat-fab" id="aiFab" onclick="openAIChat()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</button>
+
+<div class="ai-chat-panel" id="aiPanel">
+  <div class="ai-chat-header">
+    <div class="ai-chat-header-left">
+      <div class="ai-avatar">✦</div>
+      <div><div class="ai-chat-title">Tile Assistant</div><div class="ai-chat-status">● Online — Ready to help</div></div>
+    </div>
+    <button class="ai-chat-close-btn" onclick="closeAIChat()">✕</button>
+  </div>
+  <div class="ai-chat-messages" id="aiMessages">
+    <div class="ai-msg bot">
+      <div class="ai-msg-bubble">Namaste! 🙏 I'm your Tile Story design assistant. Tell me about your space — room type, style, color preference — and I'll find the perfect tiles for you!</div>
+    </div>
+    <div class="ai-msg bot">
+      <div class="ai-msg-bubble">Try asking:
+        <div class="ai-suggestions-row">
+          <span class="ai-sug" onclick="fillAI(this)">Luxury bathroom tiles</span>
+          <span class="ai-sug" onclick="fillAI(this)">Moroccan living room</span>
+          <span class="ai-sug" onclick="fillAI(this)">White marble flooring</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ai-typing" id="aiTyping"><div class="ai-typing-dots"><span class="ai-typing-dot"></span><span class="ai-typing-dot"></span><span class="ai-typing-dot"></span></div></div>
+  <div class="ai-chat-input-row">
+    <input type="text" id="aiInput" placeholder="Describe your space or style..." onkeydown="if(event.key==='Enter')sendAI()">
+    <button class="ai-chat-send" onclick="sendAI()">➤</button>
+  </div>
+</div>
+
+<!-- ════ VISUAL LENS ════ -->
+<div class="vl-modal" id="vlModal">
+  <button class="vl-close" onclick="closeVL()">✕</button>
+  <div class="vl-brand">✦ AI Visual Lens</div>
+
+  <div class="vl-home" id="vlHome">
+    <div class="vl-hero-icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    </div>
+    <h2 class="vl-hero-title">Find Your <em>Perfect Tile</em></h2>
+    <p class="vl-hero-sub">Upload any photo — room inspiration, a tile you love, or a color swatch — and our AI finds the closest matches instantly.</p>
+    <div class="vl-action-row">
+      <button class="vl-btn vl-btn-cam" onclick="openVLCamera()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Camera
+      </button>
+      <button class="vl-btn vl-btn-gal" onclick="document.getElementById('vlFile').click()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Gallery
+      </button>
+      <input type="file" id="vlFile" accept="image/*" style="display:none" onchange="handleVLFile(event)">
+    </div>
+  </div>
+
+  <div class="vl-cam-view" id="vlCamView">
+    <video class="vl-cam-video" id="vlVideo" autoplay playsinline muted></video>
+    <button class="vl-cam-shutter" onclick="captureVL()"><div class="vl-cam-shutter-inner"></div></button>
+    <button class="vl-close" onclick="stopVLCamera();document.getElementById('vlHome').classList.remove('hide');" style="top:1.2rem;left:1.2rem;">✕</button>
+  </div>
+
+  <div class="vl-analyzing" id="vlAnalyzing">
+    <div style="text-align:center">
+      <div class="vl-ana-img"><img id="vlAnaImg" src="" alt=""><div class="vl-scan-line"></div></div>
+      <div class="vl-ana-title">Analyzing Image</div>
+      <div class="vl-ana-sub">Detecting colors · Matching textures</div>
+      <div class="vl-ana-dots"><div class="vl-ana-dot"></div><div class="vl-ana-dot"></div><div class="vl-ana-dot"></div></div>
+    </div>
+  </div>
+
+  <div class="vl-results" id="vlResults">
+    <div class="vl-res-top">
+      <div class="vl-res-thumb"><img id="vlResThumb" src="" alt=""></div>
+      <div class="vl-res-info">
+        <div class="vl-res-label">Visual Match Results</div>
+        <div class="vl-res-count" id="vlResCount">Loading...</div>
+      </div>
+      <button class="vl-res-retry" onclick="resetVL()" title="Try another photo">↺</button>
+    </div>
+    <div class="vl-palette"><span class="vl-pal-label">Detected Palette</span><div id="vlPalette" style="display:flex;gap:.4rem;"></div></div>
+    <div class="vl-res-body">
+      <div class="vl-res-title">Tiles That <em>Match</em></div>
+      <div class="vl-grid" id="vlGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ ADMIN ════ -->
+<div id="adminOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--parchment);overflow-y:auto;">
+  <div style="max-width:800px;margin:0 auto;padding:2rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid rgba(201,168,76,.25);">
+      <div style="font-family:'Cinzel',serif;font-size:1.2rem;color:var(--deep-navy);letter-spacing:.1em;">TILE STORY · Admin</div>
+      <button onclick="closeAdmin()" style="background:none;border:1px solid rgba(27,58,107,.2);color:var(--text-mid);padding:.45rem 1rem;border-radius:100px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:.68rem;letter-spacing:.08em;">✕ Close</button>
+    </div>
+    <div id="adminLogin">
+      <div style="max-width:360px;margin:4rem auto;text-align:center;">
+        <div style="font-family:'Cinzel',serif;font-size:1.1rem;color:var(--deep-navy);margin-bottom:2rem;">Admin Access</div>
+        <input type="password" id="adminPw" placeholder="Enter password" style="width:100%;padding:.85rem 1rem;border:1px solid rgba(27,58,107,.2);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;margin-bottom:1rem;background:#fff;color:var(--text-dark);" onkeydown="if(event.key==='Enter')doLogin()">
+        <button onclick="doLogin()" style="width:100%;padding:.9rem;background:var(--navy);color:var(--champagne);border:none;border-radius:2px;font-family:'Outfit',sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;">Access Dashboard</button>
+        <div id="loginErr" style="display:none;color:#c0392b;font-size:.75rem;margin-top:.75rem;font-family:'DM Sans',sans-serif;">Incorrect password. Hint: tilestory2024</div>
+      </div>
+    </div>
+    <div id="adminDash" style="display:none;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;">
+        <div style="background:#fff;border:1px solid rgba(201,168,76,.2);padding:1.5rem;text-align:center;border-radius:2px;"><div style="font-family:'Cinzel',serif;font-size:1.8rem;color:var(--deep-gold);">300+</div><div style="font-family:'Outfit',sans-serif;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-mid);margin-top:.3rem;">Tiles</div></div>
+        <div style="background:#fff;border:1px solid rgba(201,168,76,.2);padding:1.5rem;text-align:center;border-radius:2px;"><div style="font-family:'Cinzel',serif;font-size:1.8rem;color:var(--deep-gold);">4.85★</div><div style="font-family:'Outfit',sans-serif;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-mid);margin-top:.3rem;">Rating</div></div>
+        <div style="background:#fff;border:1px solid rgba(201,168,76,.2);padding:1.5rem;text-align:center;border-radius:2px;"><div style="font-family:'Cinzel',serif;font-size:1.8rem;color:var(--deep-gold);">8</div><div style="font-family:'Outfit',sans-serif;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-mid);margin-top:.3rem;">Categories</div></div>
+      </div>
+      <div style="background:#fff;border:1px solid rgba(27,58,107,.1);padding:1.5rem;border-radius:2px;margin-bottom:1rem;">
+        <div style="font-family:'Outfit',sans-serif;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--deep-gold);margin-bottom:1rem;">Contact Info</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--text-mid);line-height:2;">
+          📍 1 Sterling Road, Nungambakkam, Chennai 600034<br>
+          📞 +91 89391 35853<br>
+          🕐 Mon–Sat: 9AM–7PM · Sun: 10AM–5PM<br>
+          📸 @tilestory
+        </div>
+      </div>
+      <button onclick="closeAdmin()" style="background:var(--gold);color:var(--deep-navy);border:none;padding:.85rem 2rem;font-family:'Outfit',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;border-radius:2px;">← Back to Site</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ CURSOR ═══
+const isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+if(!isTouch){
+  const cD=document.getElementById('cDot'),cR=document.getElementById('cRing');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cD.style.left=mx+'px';cD.style.top=my+'px';});
+  (function loop(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;cR.style.left=rx+'px';cR.style.top=ry+'px';requestAnimationFrame(loop);})();
+  document.querySelectorAll('a,button,.coll-card,.rev-card,.feat-card').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{cD.classList.add('hov');cR.classList.add('hov');});
+    el.addEventListener('mouseleave',()=>{cD.classList.remove('hov');cR.classList.remove('hov');});
+  });
+}
+
+// ═══ NAV ═══
+const nav=document.getElementById('nav');
+let lastY=0,navHid=false;
+window.addEventListener('scroll',()=>{
+  const sy=window.scrollY;
+  nav.classList.toggle('scrolled',sy>80);
+  if(sy>150){
+    if(sy>lastY+8&&!navHid){nav.style.transform='translateY(-110%)';navHid=true;}
+    else if(sy<lastY-4&&navHid){nav.style.transform='';navHid=false;}
+  } else {nav.style.transform='';navHid=false;}
+  lastY=sy;
+},{passive:true});
+document.getElementById('burger').onclick=()=>document.getElementById('mobNav').classList.add('open');
+document.getElementById('mobClose').onclick=()=>document.getElementById('mobNav').classList.remove('open');
+function closeMob(){document.getElementById('mobNav').classList.remove('open');}
+
+// ═══ SCROLL REVEAL ═══
+const revObs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');}),{threshold:.12,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
+
+// ═══ INSTAGRAM LAZY LOAD ═══
+const reelObs=new IntersectionObserver(entries=>entries.forEach(e=>{
+  if(e.isIntersecting){const t=e.target;if(t.src==='about:blank'||t.src.endsWith('about:blank'))t.src=t.dataset.src;}
+}),{threshold:.1});
+document.querySelectorAll('.insta-iframe').forEach(r=>reelObs.observe(r));
+
+// ═══ REEL MODAL ═══
+const REELS={'1':{embed:'https://www.instagram.com/reel/DUaeamekywE/embed/',ig:'https://www.instagram.com/reel/DUaeamekywE/'},'2':{embed:'https://www.instagram.com/reel/DUQX3eXkwOS/embed/',ig:'https://www.instagram.com/reel/DUQX3eXkwOS/'}};
+function playReel(id){
+  const modal=document.getElementById('reelModal');
+  document.getElementById('reelModalFrame').src=REELS[id].embed;
+  modal.classList.add('open');document.body.style.overflow='hidden';
+}
+function closeReel(){
+  document.getElementById('reelModal').classList.remove('open');
+  document.getElementById('reelModalFrame').src='about:blank';
+  document.body.style.overflow='';
+}
+
+// ═══ CONTACT ═══
+function sendWA(){
+  const n=document.getElementById('cName').value.trim()||'Customer';
+  const p=document.getElementById('cPhone').value.trim();
+  const r=document.getElementById('cRoom').value;
+  const m=document.getElementById('cMsg').value.trim();
+  const msg=`Hi Tile Story! 👋\n\nName: ${n}\nPhone: ${p}${r?'\nLooking for: '+r:''}\n${m?'\nMessage: '+m:''}\n\nI found you through your website!`;
+  window.open('https://wa.me/918939135853?text='+encodeURIComponent(msg),'_blank');
+  document.getElementById('contact-success').style.display='block';
+  setTimeout(()=>document.getElementById('contact-success').style.display='none',3000);
+}
+
+// ═══ ADMIN ═══
+function openAdmin(){document.getElementById('adminOverlay').style.display='block';document.body.style.overflow='hidden';}
+function closeAdmin(){document.getElementById('adminOverlay').style.display='none';document.body.style.overflow='';}
+function doLogin(){
+  if(document.getElementById('adminPw').value==='tilestory2024'){
+    document.getElementById('adminLogin').style.display='none';
+    document.getElementById('adminDash').style.display='block';
+  } else {document.getElementById('loginErr').style.display='block';}
+}
+
+// ═══════════════════════════════════
+// SCROLL SCRUBBER — Apple Style (Real Video)
+// ═══════════════════════════════════
+(function(){
+  const section   = document.getElementById('scrubber');
+  const sticky    = document.getElementById('scrubber-sticky');
+  const overlay   = document.getElementById('scrub-overlay');
+  const dark      = document.getElementById('scrub-dark');
+  const progFill  = document.getElementById('progFill');
+  const arrow     = document.getElementById('scrub-arrow');
+  const placeholder = document.getElementById('scrub-placeholder');
+
+  // ── CREATE VIDEO ELEMENT ──
+  const video = document.createElement('video');
+  video.src = 'hero_scroll.mp4';
+  video.preload = 'auto';
+  video.muted = true;
+  video.playsInline = true;
+  video.loop = false;
+  video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s;z-index:2;';
+  sticky.appendChild(video);
+
+  let videoDuration = 0;
+  let videoReady = false;
+
+  video.addEventListener('loadedmetadata', () => {
+    videoDuration = video.duration;
+    videoReady = true;
+    // Fade in video, fade out placeholder
+    video.style.opacity = '1';
+    placeholder.style.opacity = '0';
+    placeholder.style.transition = 'opacity .6s';
+    console.log('✅ Scroll video ready:', videoDuration + 's');
+  });
+
+  video.addEventListener('error', () => {
+    console.warn('⚠️ Video not found — using tile placeholder');
+    // Placeholder stays visible, tile animation runs
+    runTileFallback();
+  });
+
+  // Load video
+  video.load();
+
+  // ── TILE FALLBACK (shows while video loads or if video missing) ──
+  const COLS=8,ROWS=6,TOTAL=COLS*ROWS;
+  const COLORS=['#0D2040','#1B3A6B','#2A4464','#1a2f4b','#0f1e2e','#16213A'];
+  const tileGrid = document.getElementById('tileGrid');
+  for(let i=0;i<TOTAL;i++){
+    const t=document.createElement('div');
+    t.className='scrub-tile';
+    t.style.background=COLORS[Math.floor(Math.random()*COLORS.length)];
+    tileGrid.appendChild(t);
+  }
+  const tiles=[...tileGrid.querySelectorAll('.scrub-tile')];
+
+  function runTileFallback(){
+    placeholder.style.opacity='1';
+  }
+
+  function animateTiles(p){
+    if(videoReady) return; // Skip if video is playing
+    const lit=Math.floor(p*TOTAL);
+    tiles.forEach((t,i)=>{
+      const dist=Math.abs(i-lit);
+      if(i<lit){
+        const wave=Math.sin((i/TOTAL)*Math.PI*4+p*Math.PI*2);
+        const intensity=0.3+wave*0.15;
+        const isGold=i%7===0&&p>0.4;
+        if(isGold){t.className='scrub-tile gold';t.style.background='';}
+        else{t.className='scrub-tile lit';t.style.background=`rgba(27,58,107,${intensity})`;}
+      } else if(dist<3){
+        const g=1-(dist/3);
+        t.className='scrub-tile';
+        t.style.background=`rgba(201,168,76,${g*0.4})`;
+        t.style.boxShadow=`inset 0 0 ${g*20}px rgba(201,168,76,${g*0.3})`;
+      } else {
+        t.className='scrub-tile';
+        t.style.background=COLORS[i%COLORS.length];
+        t.style.boxShadow='';
+      }
+    });
+  }
+
+  // ── SCROLL HANDLER ──
+  let lastP = -1;
+  let ticking = false;
+
+  function onScroll(){
+    if(ticking) return;
+    ticking = true;
+    requestAnimationFrame(()=>{
+      ticking = false;
+      const rect  = section.getBoundingClientRect();
+      const total = section.offsetHeight - window.innerHeight;
+      const scrolled = -rect.top;
+      const p = Math.min(Math.max(scrolled / total, 0), 1);
+
+      if(Math.abs(p - lastP) < 0.001) return;
+      lastP = p;
+
+      // PROGRESS BAR
+      progFill.style.width = (p * 100) + '%';
+
+      // ARROW fade
+      arrow.style.opacity = p < 0.05 ? 0.5 : Math.max(0, 0.5-(p-0.05)*10);
+
+      // DARK OVERLAY — fades as video reveals
+      const darkOp = p < 0.1 ? 1 : Math.max(0, 1-(p-0.1)/0.25);
+      dark.style.opacity = darkOp;
+
+      // TEXT overlay — shows from 60% scroll
+      if(p > 0.6) overlay.classList.add('show');
+      else overlay.classList.remove('show');
+
+      // VIDEO SCRUB — the magic!
+      if(videoReady && videoDuration > 0){
+        const targetTime = p * videoDuration;
+        // Only update if difference is significant (avoids micro-stutters)
+        if(Math.abs(video.currentTime - targetTime) > 0.016){
+          video.currentTime = targetTime;
+        }
+      } else {
+        // Tile fallback animation
+        animateTiles(p);
+      }
+    });
+  }
+
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+})();
+
+// ═══════════════════════════════════
+// AI CHATBOT — Groq
+// ═══════════════════════════════════
+const GROQ_KEY='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';
+const PRODUCTS_DB=[
+  {id:'TS001',name:'Nordic Gray Wood',cat:'Flooring',size:'600x1200',finish:'Matte',colors:['gray','wood'],use:['living room','bedroom']},
+  {id:'TS002',name:'Carrara White Marble',cat:'Flooring',size:'800x800',finish:'Polished',colors:['white','marble'],use:['bedroom','lobby']},
+  {id:'TS003',name:'Warm Oak Plank',cat:'Flooring',size:'200x1200',finish:'Matte',colors:['wood','brown'],use:['living room','kitchen']},
+  {id:'TS005',name:'Azure Gold Luxury',cat:'Bathroom',size:'300x600',finish:'Glossy',colors:['blue','gold'],use:['bathroom']},
+  {id:'TS007',name:'Nero Marquina Black',cat:'Bathroom',size:'600x1200',finish:'Polished',colors:['black','white'],use:['bathroom','feature wall']},
+  {id:'TS009',name:'Fes Blue Pattern',cat:'Moroccan',size:'200x200',finish:'Matte',colors:['blue','gold'],use:['kitchen','bathroom']},
+  {id:'TS012',name:'Calacatta Gold Vein',cat:'Large Slab',size:'1600x3200',finish:'Polished',colors:['gold','white'],use:['lobby','living room']},
+  {id:'TS016',name:'Industrial Concrete',cat:'Designer',size:'600x600',finish:'Matte',colors:['gray'],use:['dining','office']},
+  {id:'TS020',name:'Statuario White Premium',cat:'Imported',size:'800x1600',finish:'Polished',colors:['white','marble'],use:['lobby','bathroom']},
+  {id:'TS026',name:'Hexagon Anti-Slip',cat:'Parking',size:'200mm Hex',finish:'Anti-Slip',colors:['gray'],use:['parking','outdoor']},
+];
+
+function matchProducts(q){
+  const ql=q.toLowerCase();
+  return PRODUCTS_DB.filter(p=>{
+    const hay=[p.name,p.cat,p.finish,...p.colors,...p.use].join(' ').toLowerCase();
+    return hay.includes(ql)||ql.includes(p.cat.toLowerCase())||p.colors.some(c=>ql.includes(c))||p.use.some(u=>ql.includes(u.split(' ')[0]));
+  }).slice(0,3);
+}
+
+function openAIChat(){document.getElementById('aiFab').classList.add('open');document.getElementById('aiPanel').classList.add('open');}
+function closeAIChat(){document.getElementById('aiFab').classList.remove('open');document.getElementById('aiPanel').classList.remove('open');}
+function fillAI(el){document.getElementById('aiInput').value=el.textContent;sendAI();}
+
+function addMsg(text,role){
+  const msgs=document.getElementById('aiMessages');
+  const d=document.createElement('div');
+  d.className=`ai-msg ${role}`;
+  d.innerHTML=`<div class="ai-msg-bubble">${text}</div>`;
+  msgs.appendChild(d);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+async function sendAI(){
+  const inp=document.getElementById('aiInput');
+  const q=inp.value.trim();
+  if(!q) return;
+  inp.value='';
+  addMsg(q,'user');
+  document.getElementById('aiTyping').style.display='flex';
+  document.getElementById('aiMessages').scrollTop=9999;
+
+  const matched=matchProducts(q);
+  const ctx=matched.length?matched.map(p=>`${p.id}: ${p.name} (${p.cat}, ${p.size}mm, ${p.finish})`).join('; '):'No specific match — suggest visiting showroom.';
+
+  try{
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${GROQ_KEY}`},
+      body:JSON.stringify({
+        model:'llama-3.1-8b-instant',max_tokens:180,
+        messages:[
+          {role:'system',content:`You are Tile Story's AI assistant — premium tile showroom in Chennai. Be warm and concise (2-3 sentences max). Matched tiles: ${ctx}. Always mention WhatsApp +91 89391 35853 for enquiry.`},
+          {role:'user',content:q}
+        ]
+      })
+    });
+    const data=await res.json();
+    const reply=data.choices?.[0]?.message?.content||"Visit our showroom or WhatsApp us at +91 89391 35853!";
+    document.getElementById('aiTyping').style.display='none';
+    let html=reply;
+    if(matched.length){
+      html+='<div style="margin-top:.6rem">';
+      matched.forEach(p=>{html+=`<span class="ai-product-pill" onclick="window.open('https://wa.me/918939135853?text=I am interested in ${encodeURIComponent(p.name)}','_blank')">${p.id} · ${p.name}</span>`;});
+      html+='</div>';
+    }
+    addMsg(html,'bot');
+  }catch(e){
+    document.getElementById('aiTyping').style.display='none';
+    addMsg('Please <a href="https://wa.me/918939135853" target="_blank" style="color:var(--deep-gold)">WhatsApp us</a> for personalized recommendations!','bot');
+  }
+}
+
+// ═══════════════════════════════════
+// VISUAL LENS — Canvas AI
+// ═══════════════════════════════════
+let vlStream=null,vlImgData=null;
+const VL_PRODUCTS=PRODUCTS_DB;
+
+function openVL(){document.getElementById('vlModal').classList.add('open');document.body.style.overflow='hidden';}
+function closeVL(){stopVLCam();document.getElementById('vlModal').classList.remove('open');document.body.style.overflow='';}
+function resetVL(){
+  stopVLCam();
+  document.getElementById('vlHome').classList.remove('hide');
+  document.getElementById('vlResults').classList.remove('show');
+  document.getElementById('vlAnalyzing').classList.remove('show');
+  document.getElementById('vlCamView').classList.remove('show');
+}
+
+async function openVLCamera(){
+  document.getElementById('vlHome').classList.add('hide');
+  document.getElementById('vlCamView').classList.add('show');
+  try{
+    vlStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+    document.getElementById('vlVideo').srcObject=vlStream;
+  }catch(e){alert('Camera denied. Use gallery.');resetVL();}
+}
+function stopVLCam(){if(vlStream){vlStream.getTracks().forEach(t=>t.stop());vlStream=null;}}
+
+function captureVL(){
+  const v=document.getElementById('vlVideo');
+  const c=document.createElement('canvas');
+  c.width=v.videoWidth;c.height=v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0);
+  stopVLCam();
+  document.getElementById('vlCamView').classList.remove('show');
+  processVLImage(c.toDataURL('image/jpeg',.9));
+}
+
+function handleVLFile(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{document.getElementById('vlHome').classList.add('hide');processVLImage(ev.target.result);};
+  reader.readAsDataURL(file);
+}
+
+function processVLImage(dataUrl){
+  vlImgData=dataUrl;
+  document.getElementById('vlAnaImg').src=dataUrl;
+  document.getElementById('vlResThumb').src=dataUrl;
+  document.getElementById('vlAnalyzing').classList.add('show');
+  setTimeout(()=>analyzeAndShow(dataUrl),2200);
+}
+
+function analyzeAndShow(dataUrl){
+  const img=new Image();
+  img.onload=()=>{
+    // Canvas color analysis
+    const c=document.createElement('canvas');c.width=50;c.height=50;
+    const x=c.getContext('2d');x.drawImage(img,0,0,50,50);
+    const px=x.getImageData(0,0,50,50).data;
+    let r=0,g=0,b=0,n=px.length/4;
+    for(let i=0;i<px.length;i+=4){r+=px[i];g+=px[i+1];b+=px[i+2];}
+    r=r/n;g=g/n;b=b/n;
+
+    // Dominant color detection
+    const isLight=r>170&&g>170&&b>170;
+    const isDark=r<70&&g<70&&b<70;
+    const isWarm=r>g&&r>b;
+    const isCool=b>r&&b>g&&b*1.2>g;
+
+    // Match to product colors
+    let candidates;
+    if(isLight) candidates=['TS002','TS020','TS001'];
+    else if(isDark) candidates=['TS007','TS016'];
+    else if(isWarm) candidates=['TS012','TS005','TS003'];
+    else if(isCool) candidates=['TS009','TS005','TS007'];
+    else candidates=['TS001','TS016','TS003'];
+
+    const palette=[`rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`,
+      `rgb(${Math.round(r*.8)},${Math.round(g*.8)},${Math.round(b*.8)})`,
+      `rgb(${Math.round(Math.min(r*1.2,255))},${Math.round(Math.min(g*1.2,255))},${Math.round(Math.min(b*1.2,255))})`];
+
+    const results=candidates.map((id,i)=>{
+      const p=PRODUCTS_DB.find(x=>x.id===id);
+      return {p,score:92-i*8};
+    }).filter(r=>r.p);
+
+    document.getElementById('vlAnalyzing').classList.remove('show');
+    showVLResults(results,palette,dataUrl);
+  };
+  img.src=dataUrl;
+}
+
+function showVLResults(matches,palette,imgData){
+  document.getElementById('vlResCount').textContent=`${matches.length} tiles found`;
+  document.getElementById('vlPalette').innerHTML=palette.map(c=>`<div class="vl-pal-c" style="background:${c}"></div>`).join('');
+  const grid=document.getElementById('vlGrid');
+  if(!matches.length){grid.innerHTML='<div style="color:rgba(255,255,255,.4);font-size:.82rem;padding:2rem;text-align:center;grid-column:1/-1">No matches found. Try another photo.</div>';return;}
+  const badgeClass=i=>i===0?'gold':i===1?'silver':'bronze';
+  grid.innerHTML=matches.map((m,i)=>`
+    <div class="vl-card" onclick="window.open('https://wa.me/918939135853?text=I found ${encodeURIComponent(m.p.name)} via Visual Lens and I am interested!','_blank')">
+      <div class="vl-card-img"><img src="${m.p.id}.webp" alt="${m.p.name}" onerror="this.style.display='none'"></div>
+      <div class="vl-card-shade"></div>
+      <span class="vl-match-badge ${badgeClass(i)}">${m.score}%</span>
+      <div class="vl-card-info"><div class="vl-card-cat">${m.p.cat}</div><div class="vl-card-name">${m.p.name}</div></div>
+    </div>`).join('');
+  document.getElementById('vlResults').classList.add('show');
+}
+
+// Open Visual Lens from search lens button
+function openLens(){openVL();}
+
+// ═══ KEYBOARD ESC ═══
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeReel();closeVL();closeAIChat();}
+});
+</script>
+</body>
+</html>
