@@ -714,7 +714,7 @@ footer{background:var(--deep-navy);padding:3rem 2rem;border-top:1px solid rgba(2
   <div id="scrubber-sticky">
 
     <!-- PLACEHOLDER TILE GRID -->
-    <div id="scrub-placeholder">
+    <div id="scrub-placeholder" style="opacity:0.3;">
       <div class="scrub-tile-grid" id="tileGrid"></div>
     </div>
 
@@ -722,7 +722,7 @@ footer{background:var(--deep-navy);padding:3rem 2rem;border-top:1px solid rgba(2
     <canvas id="scrub-canvas"></canvas>
 
     <!-- DARK OVERLAY -->
-    <div id="scrub-dark"></div>
+    <div id="scrub-dark" style="opacity:1;"></div>
 
     <!-- TEXT — Split Letter Parallax -->
     <div id="scrub-overlay">
@@ -1286,98 +1286,180 @@ function doLogin(){
 }
 
 // ════════════════════════════════════════════════════════
-// APPLE SCROLL SCRUBBER — Frame Sequence (152 frames)
-// Pure canvas draw, scroll drives frame index
-// Reverse on scroll up, butter smooth RAF lerp
+// APPLE SCROLL SCRUBBER — Frame Sequence v4
 // ════════════════════════════════════════════════════════
 (function(){
-  const TOTAL   = 152;
-  const BASE    = 'https://raw.githubusercontent.com/shriashwin007-cmd/tilestory-production/main';
-  const section = document.getElementById('scrubber');
-  const sticky  = document.getElementById('scrubber-sticky');
-  const dark    = document.getElementById('scrub-dark');
-  const progFill= document.getElementById('progFill');
-  const arrow   = document.getElementById('scrub-arrow');
-  const placeholder = document.getElementById('scrub-placeholder');
+  const TOTAL    = 152;
+  const BASE     = 'https://raw.githubusercontent.com/shriashwin007-cmd/tilestory-production/main';
+  const section  = document.getElementById('scrubber');
+  const sticky   = document.getElementById('scrubber-sticky');
+  const dark     = document.getElementById('scrub-dark');
+  const progFill = document.getElementById('progFill');
+  const arrow    = document.getElementById('scrub-arrow');
+  const ph       = document.getElementById('scrub-placeholder');
 
-  const scrubEyebrow = document.getElementById('scrubEyebrow');
-  const scrubWord1   = document.getElementById('scrubWord1');
-  const scrubWord2   = document.getElementById('scrubWord2');
-  const scrubSub     = document.getElementById('scrubSub');
-  const scrubDivEl   = document.getElementById('scrubDividerEl');
+  const elEyebrow = document.getElementById('scrubEyebrow');
+  const elWord1   = document.getElementById('scrubWord1');
+  const elWord2   = document.getElementById('scrubWord2');
+  const elSub     = document.getElementById('scrubSub');
+  const elDiv     = document.getElementById('scrubDividerEl');
 
-  // Stagger letter transitions
-  function stagger(el,base){
+  // stagger letter delays
+  [[elEyebrow,0],[elWord1,0],[elWord2,0.1],[elSub,0.08]].forEach(([el,b])=>{
     if(!el) return;
-    [...el.querySelectorAll('span')].forEach((s,i)=>s.style.transitionDelay=(base+i*0.04)+'s');
-  }
-  stagger(scrubEyebrow,0); stagger(scrubWord1,0);
-  stagger(scrubWord2,0.1); stagger(scrubSub,0.08);
+    [...el.querySelectorAll('span')].forEach((s,i)=>s.style.transitionDelay=(b+i*0.04)+'s');
+  });
 
-  // ── CANVAS SETUP ──
+  // ── CANVAS ──
   const canvas = document.createElement('canvas');
-  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;';
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:2;background:#000;';
   sticky.appendChild(canvas);
   const ctx = canvas.getContext('2d');
 
-  function resizeCanvas(){
+  function resize(){
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-    if(currentFrame >= 0 && frames[currentFrame]?.complete) drawFrame(currentFrame);
+    if(frames[curIdx] && frames[curIdx].complete) draw(curIdx);
   }
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas, {passive:true});
+  resize();
+  window.addEventListener('resize', resize, {passive:true});
 
-  // ── PRELOAD ALL 152 FRAMES ──
-  const frames = [];
-  let loadedCount = 0;
-  let firstFrameReady = false;
+  // ── DRAW ──
+  function draw(i){
+    const img = frames[Math.min(Math.max(Math.round(i),0),TOTAL-1)];
+    if(!img || !img.complete || !img.naturalWidth) return;
+    const cw=canvas.width, ch=canvas.height;
+    const sc=Math.max(cw/img.naturalWidth, ch/img.naturalHeight);
+    const w=img.naturalWidth*sc, h=img.naturalHeight*sc;
+    ctx.clearRect(0,0,cw,ch);
+    ctx.drawImage(img,(cw-w)/2,(ch-h)/2,w,h);
+  }
 
-  // Loading progress UI
-  const loadUI = document.createElement('div');
-  loadUI.style.cssText = `
-    position:absolute;bottom:3.5rem;left:50%;transform:translateX(-50%);
-    z-index:20;display:flex;flex-direction:column;align-items:center;gap:.5rem;
-  `;
-  loadUI.innerHTML = `
-    <div style="font-family:'Outfit',sans-serif;font-size:.58rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(201,168,76,.6);" id="loadTxt">Loading frames...</div>
-    <div style="width:120px;height:1px;background:rgba(255,255,255,.1);">
-      <div id="loadBar" style="height:100%;background:var(--gold);width:0%;transition:width .2s;"></div>
-    </div>
-  `;
-  sticky.appendChild(loadUI);
+  // ── LOAD BAR ──
+  const loadWrap = document.createElement('div');
+  loadWrap.id = 'scrubLoader';
+  loadWrap.style.cssText = 'position:absolute;bottom:3.5rem;left:50%;transform:translateX(-50%);z-index:30;display:flex;flex-direction:column;align-items:center;gap:.5rem;pointer-events:none;';
+  loadWrap.innerHTML = `
+    <div id="loadTxt" style="font-family:Outfit,sans-serif;font-size:.55rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(201,168,76,.7);">Loading · 0%</div>
+    <div style="width:140px;height:1px;background:rgba(255,255,255,.1);border-radius:1px;">
+      <div id="loadBar" style="height:100%;background:linear-gradient(90deg,#C9A84C,#E8D5A3);width:0%;transition:width .15s;border-radius:1px;"></div>
+    </div>`;
+  sticky.appendChild(loadWrap);
 
-  function onFrameLoad(i){
-    loadedCount++;
-    const pct = Math.round(loadedCount/TOTAL*100);
+  // ── PRELOAD FRAMES ──
+  const frames = new Array(TOTAL);
+  let loaded = 0;
+  let firstReady = false;
+
+  function onLoad(i){
+    loaded++;
+    const pct = Math.round(loaded/TOTAL*100);
     const bar = document.getElementById('loadBar');
     const txt = document.getElementById('loadTxt');
     if(bar) bar.style.width = pct+'%';
+    if(txt) txt.textContent = 'Loading · '+pct+'%';
 
-    // Show first frame immediately
-    if(i===0 && !firstFrameReady){
-      firstFrameReady = true;
-      placeholder.style.transition='opacity .6s';
-      placeholder.style.opacity='0';
-      drawFrame(0);
-      canvas.style.opacity='1';
+    // Draw first frame as soon as it loads
+    if(i===0 && !firstReady){
+      firstReady = true;
+      ph.style.transition = 'opacity .8s';
+      ph.style.opacity = '0';
+      draw(0);
     }
 
-    if(loadedCount === TOTAL){
-      // All loaded — hide loader
-      loadUI.style.transition='opacity .6s';
-      loadUI.style.opacity='0';
-      setTimeout(()=>loadUI.remove(),700);
-      if(txt) txt.textContent='Ready!';
-      console.log('✅ All '+TOTAL+' frames loaded!');
+    if(loaded === TOTAL){
+      const lw = document.getElementById('scrubLoader');
+      if(lw){ lw.style.transition='opacity .6s'; lw.style.opacity='0'; setTimeout(()=>lw.remove(),700); }
+      console.log('✅ All 152 frames loaded!');
+      draw(Math.round(smoothIdx));
     }
   }
 
-  for(let i=0;i<TOTAL;i++){
+  // Load frames 0-first for fastest first paint
+  for(let i=0; i<TOTAL; i++){
     const img = new Image();
+    img.crossOrigin = 'anonymous';
     const num = String(i+1).padStart(3,'0');
     img.src = BASE+'/ezgif-frame-'+num+'.jpg';
-    img.onload  = (()=>{ const idx=i; return ()=>onFrameLoad(idx); })();
+    const idx = i;
+    img.onload  = ()=>onLoad(idx);
+    img.onerror = ()=>{ loaded++; };
+    frames[i] = img;
+  }
+
+  // ── RAF SMOOTH LERP ──
+  let targetIdx = 0;
+  let smoothIdx = 0;
+  let curIdx    = 0;
+
+  function raf(){
+    smoothIdx += (targetIdx - smoothIdx) * 0.1;
+    const ni = Math.round(smoothIdx);
+    if(ni !== curIdx){
+      curIdx = ni;
+      draw(curIdx);
+    }
+    requestAnimationFrame(raf);
+  }
+  raf();
+
+  // ── PROGRESS ──
+  function getP(){
+    const top  = section.offsetTop;
+    const h    = section.offsetHeight;
+    const vh   = window.innerHeight;
+    return Math.min(Math.max((window.scrollY-top)/(h-vh),0),1);
+  }
+
+  function tc(el,cls,add){ if(!el) return; add?el.classList.add(cls):el.classList.remove(cls); }
+
+  // ── SCROLL ──
+  function onScroll(){
+    const p = getP();
+
+    // Frame — forward + reverse
+    targetIdx = p*(TOTAL-1);
+
+    // Progress bar
+    progFill.style.width=(p*100)+'%';
+
+    // Arrow
+    arrow.style.opacity = p<0.03?'0.5':'0';
+
+    // Dark overlay — lifts fast in first 8%
+    dark.style.opacity = String(Math.max(0,1-(p/0.08)));
+
+    // Seamless end fade
+    sticky.style.opacity = p>0.92 ? String(Math.max(0,1-(p-0.92)/0.08)) : '1';
+
+    // Parallax text
+    if(elEyebrow) elEyebrow.style.transform=`translateY(${Math.max(0,(1-p)*70)}px)`;
+    if(elWord1)   elWord1.style.transform  =`translateY(${Math.max(0,(1-p)*150)}px) scale(${(0.72+p*0.28).toFixed(3)})`;
+    if(elWord2)   elWord2.style.transform  =`translateY(${Math.max(0,(1-p)*210)}px) scale(${(0.62+p*0.38).toFixed(3)})`;
+    if(elSub)     elSub.style.transform    =`translateY(${Math.max(0,(1-p)*90)}px)`;
+
+    // Letter reveals
+    tc(elEyebrow,'visible',p>0.20);
+    tc(elWord1,  'visible',p>0.30);
+    tc(elWord2,  'visible',p>0.42);
+    if(elDiv) elDiv.style.width = p>0.52?'180px':'0px';
+    tc(elSub,    'visible',p>0.55);
+  }
+
+  window.addEventListener('scroll',onScroll,{passive:true});
+  onScroll();
+
+  // ── SKIP ──
+  const skip=document.createElement('button');
+  skip.textContent='Skip ↓';
+  skip.style.cssText='position:absolute;bottom:1.8rem;right:1.8rem;z-index:30;font-family:Outfit,sans-serif;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;padding:.42rem .95rem;border-radius:100px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);color:rgba(201,168,76,.7);cursor:pointer;transition:all .3s;';
+  skip.onclick=()=>window.scrollTo({top:section.offsetTop+section.offsetHeight,behavior:'smooth'});
+  skip.onmouseenter=()=>{skip.style.background='rgba(201,168,76,.25)';skip.style.color='#C9A84C';};
+  skip.onmouseleave=()=>{skip.style.background='rgba(201,168,76,.12)';skip.style.color='rgba(201,168,76,.7)';};
+  sticky.appendChild(skip);
+
+})();
+
     img.onerror = ()=>{ loadedCount++; };
     frames.push(img);
   }
